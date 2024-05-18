@@ -47,12 +47,12 @@ MonoBehaviour:
   centerTr: {fileID: 0}
   height: 0
   objsToSpawn:
-  - {fileID: 1781949194303238870, guid: e92a0207ed6f749459a3646c2aaf3cd9, type: 3}
-  - {fileID: 8295591563862043295, guid: e01f2e62cf41a3449be2dade3b2c2d79, type: 3}
-  - {fileID: 8829451551789304542, guid: 8206b722d11501a449d6a278cca2adfa, type: 3}
-  lastObj: {fileID: 3345248989584403936, guid: 6b5e9c3dedde64240ac58831af0e3754, type: 3}
-  radius: 1
-  degreeStep: 45
+  - {fileID: 1972207730512856, guid: a492e90184104244fb85b891c068a7aa, type: 3}
+  - {fileID: 1478314613700728, guid: 3ea4e25d392b6094a8087b6adcccee36, type: 3}
+  - {fileID: 1901245927194888, guid: 746dd53a3846d0d49b689d6e8e44196d, type: 3}
+  lastObj: {fileID: 1121192042590650, guid: 4f943d3be933e9b4fb58b84173cb8c01, type: 3}
+  radius: 0.2
+  degreeStep: 30
   spawnInterval: 0.5
   explosionEvent:
     m_PersistentCalls:
@@ -84,7 +84,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7444811903600456770
 Transform:
   m_ObjectHideFlags: 0

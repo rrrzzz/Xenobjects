@@ -100,7 +100,7 @@ Shader "Custom/Dissolve" {
 			o.Albedo = _Color;
 			o.Occlusion = tex2D (_AO, IN.uv_MainTex);
 			o.Emission = EmissiveCol + _EdgeColor1 * Edge;
-			o.Normal = UnpackNormal (tex2D (_Normal, IN.uv_MainTex));
+			o.Normal = UnpackNormal (tex2D (_Normal, IN.uv_MainTex)); 
 			o.Metallic = MetallicSmooth.r * _Metallic;
 			o.Smoothness = MetallicSmooth.a * _Glossiness;
 			clip(Noise - _cutoff);

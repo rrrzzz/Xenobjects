@@ -1,11 +1,31 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.XR.ARFoundation;
 
 
 public class RadialSpawner : MonoBehaviour
 {
-    public Transform centerTr;
+    public ARTrackedImageManager trackedImgManager;
+    
+    private void OnEnable() => trackedImgManager.trackedImagesChanged += OnChanged;
+
+    private void OnDisable() => trackedImgManager.trackedImagesChanged -= OnChanged;
+    
+    private void OnChanged(ARTrackedImagesChangedEventArgs eventArgs)
+    {
+        _centerPos = eventArgs.added[0].transform.position;
+        StartCoroutine(ExplodeAfterDelay());
+    }
+
+    private IEnumerator ExplodeAfterDelay()
+    {
+        yield return new WaitForSeconds(3);
+        _isStarted = true;
+    }
+
+    private Transform _centerTr;
     public float height;
     public GameObject[] objsToSpawn;
     public GameObject lastObj;
@@ -21,16 +41,21 @@ public class RadialSpawner : MonoBehaviour
     private GameObject _currentObjToSpawn;
     private int _currentObjIdx;
     private Queue<GameObject> _spawnedObjects = new Queue<GameObject>();
+    private bool _isStarted;
 
     void Start()
     {
-        _centerPos = centerTr.position;
         _spawnTime = spawnInterval;
         _currentObjToSpawn = objsToSpawn[_currentObjIdx];
     }
 
     private void Update()
     {
+        if (!_isStarted)
+        {
+            return;
+        }
+        
         if (_currentObjIdx == objsToSpawn.Length)
             return;
     
@@ -52,7 +77,7 @@ public class RadialSpawner : MonoBehaviour
         {
             _spawnTime = Time.realtimeSinceStartup;
             var degreesInRad = Mathf.Deg2Rad * _currentDegrees;
-            var spawnPos = new Vector3(Mathf.Cos(degreesInRad) * radius + _centerPos.x, height, 
+            var spawnPos = new Vector3(Mathf.Cos(degreesInRad) * radius + _centerPos.x, _centerPos.y + height, 
                 Mathf.Sin(degreesInRad)  * radius + _centerPos.z);
             _spawnedObjects.Enqueue(Instantiate(_currentObjToSpawn, spawnPos, Quaternion.identity));
             if (_currentObjIdx > 0)
