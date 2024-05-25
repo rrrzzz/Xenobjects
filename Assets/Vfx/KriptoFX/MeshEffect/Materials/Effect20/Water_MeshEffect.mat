@@ -2,20 +2,26 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Water_MeshEffect
   m_Shader: {fileID: 4800000, guid: 972a05a1fafc1c54d8287892f2a939b6, type: 3}
-  m_ShaderKeywords: USE_FRESNEL USE_HEIGHT
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - USE_FRESNEL
+  - USE_HEIGHT
+  m_InvalidKeywords: []
   m_LightmapFlags: 5
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -49,7 +55,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _HeightTex:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 0.5, y: 0.5}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: eef71c487a8a3044783e0240ad62fddf, type: 3}
@@ -61,7 +67,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _NormalTex:
         m_Texture: {fileID: 2800000, guid: 2fc8c383258bf494a8b624e6cd53cf83, type: 3}
-        m_Scale: {x: 2, y: 1}
+        m_Scale: {x: 0.5, y: 0.5}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
@@ -75,6 +81,7 @@ Material:
         m_Texture: {fileID: 2800000, guid: cd8abd51143aa5140aded186614aa040, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _AlphaClip: 10
     - _BumpAmt: 3
@@ -89,7 +96,7 @@ Material:
     - _DstBlend: 0
     - _FPOW: 0.3
     - _FresnelDistort: -1500
-    - _FresnelPow: 2.5
+    - _FresnelPow: 10
     - _FresnelR0: -0.2
     - _Glossiness: 0.5
     - _Height: 0.001
@@ -119,9 +126,9 @@ Material:
     - _CutoutColor: {r: 1, g: 1, b: 1, a: 1}
     - _DropWavesScale: {r: 1, g: 0.5, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FresnelColor: {r: 2.6178007, g: 3.3298426, b: 3.9999995, a: 1}
-    - _HeightUVScrollDistort: {r: 0, g: -7, b: 0, a: 0}
-    - _MainColor: {r: 0.90441173, g: 0.95253557, b: 1, a: 1}
+    - _FresnelColor: {r: 0, g: 0, b: 0, a: 1}
+    - _HeightUVScrollDistort: {r: 0, g: -1, b: 0, a: 0}
+    - _MainColor: {r: 0.86694556, g: 0.9622642, b: 0.9518259, a: 1}
     - _NoiseScale: {r: 0, g: 0, b: 0, a: 0}
     - _ReflectColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _RimColor: {r: 0.057093438, g: 0.06710122, b: 0.08088237, a: 1}

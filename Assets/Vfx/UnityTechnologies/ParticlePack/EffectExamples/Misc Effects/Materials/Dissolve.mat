@@ -107,7 +107,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DisplaceAmount: 6
     - _DstBlend: 0
-    - _EdgeSize: 0
+    - _EdgeSize: 0.748
     - _Fresnel: 3
     - _GlossMapScale: 1
     - _Glossiness: 0.769
