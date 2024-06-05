@@ -107,14 +107,14 @@ Material:
     - _DetailNormalMapScale: 1
     - _DisplaceAmount: 6
     - _DstBlend: 0
-    - _EdgeSize: 0.748
+    - _EdgeSize: 0.048
     - _Fresnel: 3
     - _GlossMapScale: 1
-    - _Glossiness: 0.769
+    - _Glossiness: 0.851
     - _GlossyReflections: 1
-    - _Metallic: 0
+    - _Metallic: 0.102
     - _Mode: 0
-    - _NoiseStrength: 0.55
+    - _NoiseStrength: 0.533
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
@@ -123,7 +123,7 @@ Material:
     - _UVSec: 0
     - _Use_Gradient: 0
     - _ZWrite: 1
-    - _cutoff: 0.332
+    - _cutoff: 0
     - _cutoffTemp: 0.488
     - _glowFrequency: 1
     - _glowMax: 1
@@ -131,7 +131,7 @@ Material:
     - _marchDistance: 0.5
     - _numSteps: 4
     m_Colors:
-    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _EdgeColor1: {r: 21.112133, g: 4.960972, b: 0, a: 1}
     - _Emission: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
