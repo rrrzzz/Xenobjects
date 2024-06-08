@@ -25,7 +25,7 @@ namespace Code
             var rotNormalized = NormalizeAngle(camRot.z) * -1;
             rotNormalized = Mathf.Abs(rotNormalized);
             Tilt01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
-            titlTxt.text = Mathf.Abs(rotNormalized) + "01: " + Tilt01;
+            titlTxt.text = Mathf.Abs(rotNormalized) + "Tilt 01: " + Tilt01;
         }
         
         protected override void UpdateTouchStatus()
@@ -40,6 +40,8 @@ namespace Code
             var timeDifference = Mathf.Abs(touch1.deltaTime - touch2.deltaTime);
 
             if (!(timeDifference < TouchTimeThreshold)) return;
+            
+            titlTxt.text += " Touch at: " + Time.time;
             
             DoubleTouchEvent.Invoke();
         }

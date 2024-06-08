@@ -5,7 +5,13 @@ namespace Code
     public class MovementInteractionTestProvider : MovementInteractionProviderBase
     {
         public float zRotationInputSpeed = 1;
-        
+
+        protected override void Start()
+        {
+            base.Start();
+            SetArObjectTransform(arObjectTr);
+        }
+
         protected override void UpdatePhoneTiltAngle()
         {
             var camRot = _camTr.rotation.eulerAngles;

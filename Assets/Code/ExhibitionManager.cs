@@ -22,9 +22,8 @@ namespace Code
         private void Start()
         {
             _effects = new List<EffectBase>{_orbGlow, _distortion, _dissolveEffect};
-            _effects.ForEach(x => x.SetMaterial(dataProvider.arObjectTr));
-            
             dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
+            dataProvider.ArObjectSetEvent.AddListener(SetMaterials);
         }
         
         private void Update()
@@ -38,6 +37,11 @@ namespace Code
             }
 
             SetMovementChangingDissolution();
+        }
+
+        private void SetMaterials()
+        {
+            _effects.ForEach(x => x.SetMaterial(dataProvider.arObjectTr));
         }
 
         private void SetMovementChangingDissolution()
@@ -79,6 +83,7 @@ namespace Code
         private void OnDestroy()
         {
             dataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
+            dataProvider.ArObjectSetEvent.RemoveListener(SetMaterials);
         }
     }
 }

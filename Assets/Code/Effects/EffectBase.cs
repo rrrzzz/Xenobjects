@@ -26,10 +26,6 @@ namespace Code.Effects
 
         public void SetEffectByNormalizedValue(float t)
         {
-            if (t > 0.1f)
-            {
-                Debug.Log("dick");
-            }
             if (!Material)
             {
                 return;

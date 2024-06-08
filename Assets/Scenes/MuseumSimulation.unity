@@ -1393,6 +1393,18 @@ PrefabInstance:
       value: Object_2_for AR_UV
       objectReference: {fileID: 0}
     - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.03315725
+      objectReference: {fileID: 0}
+    - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.03315725
+      objectReference: {fileID: 0}
+    - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.03315725
+      objectReference: {fileID: 0}
+    - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5.051
       objectReference: {fileID: 0}
@@ -1431,6 +1443,10 @@ PrefabInstance:
     - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3102149191002323984, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

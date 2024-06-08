@@ -291,7 +291,7 @@ MonoBehaviour:
       m_Calls: []
   imagePosRotTxt: {fileID: 188514363}
   trackedImgManager: {fileID: 1914011442}
-  contentPrefab: {fileID: 5328538490900581499, guid: 8b1ff07385712df499bca9bbaf5de99f, type: 3}
+  contentPrefab: {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
   isSpawned: 0
   spawnedContent: {fileID: 0}
   dataProvider: {fileID: 1593050916}
@@ -747,7 +747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dissolvingDuration: 4
-  idleDurationThreshold: 7
+  idleDurationThreshold: 10
   oscillationSpeed: 1
   dataProvider: {fileID: 1593050916}
 --- !u!4 &971088385
@@ -1371,8 +1371,8 @@ MonoBehaviour:
   arObjectTr: {fileID: 0}
   isDebugInfoShown: 1
   maxTilt: 60
-  maxDistance: 3
-  minDistance: 1.5
+  maxDistance: 2
+  minDistance: 0.6
   movementTrackingInterval: 1
   movementThreshold: 0.2
   shakeText: {fileID: 1751178944}

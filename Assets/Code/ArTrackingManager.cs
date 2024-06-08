@@ -28,16 +28,16 @@ public class ArTrackingManager : MonoBehaviour
             _trackedImg = eventArgs.added[0];
             imageRecognizedEvent.Invoke(_trackedImg.name);
             
-            // TODO: Check if this is necessary
-            if (spawnedContent)
-            {
-                Destroy(spawnedContent);
-            }
+            // // TODO: Check if this is necessary
+            // if (spawnedContent)
+            // {
+            //     Destroy(spawnedContent);
+            // }
             
             spawnedContent = Instantiate(contentPrefab, _trackedImg.transform);
             isSpawned = true;
 
-            dataProvider.arObjectTr = spawnedContent.transform;
+            dataProvider.SetArObjectTransform(spawnedContent.transform);
         }
 
         if (eventArgs.removed.Count != 0)

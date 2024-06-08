@@ -28,6 +28,7 @@ namespace Code
         public float IdleDuration { get; set; }
         public UnityEvent DoubleTouchEvent { get; } = new UnityEvent();
         public UnityEvent ShakeEvent { get; } = new UnityEvent();
+        public UnityEvent ArObjectSetEvent { get; } = new UnityEvent();
         
         protected float _movementStateStartTime;
         protected Transform _camTr;
@@ -47,6 +48,12 @@ namespace Code
             UpdatePhoneTiltAngle();
             UpdateTouchStatus();
             UpdateShakeStatus();
+        }
+        
+        public void SetArObjectTransform(Transform arObjectTransform)
+        {
+            arObjectTr = arObjectTransform;
+            ArObjectSetEvent.Invoke();
         }
 
         private void UpdateMovementStatus()

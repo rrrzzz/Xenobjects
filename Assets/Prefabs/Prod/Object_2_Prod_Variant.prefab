@@ -13,6 +13,18 @@ PrefabInstance:
       value: GlowingOrb
       objectReference: {fileID: 0}
     - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.025
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.025
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.025
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5.051
       objectReference: {fileID: 0}
@@ -51,6 +63,10 @@ PrefabInstance:
     - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703453078899160172, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3372994828266122966, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: m_Name
