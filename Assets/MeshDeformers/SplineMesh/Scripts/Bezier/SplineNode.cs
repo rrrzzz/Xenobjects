@@ -7,7 +7,7 @@ using UnityEngine.Events;
 namespace SplineMesh {
     /// <summary>
     /// Spline node storing a position and a direction (tangent).
-    /// Note : you shouldn't modify position and direction manualy but use dedicated methods instead, to insure event raising.
+    /// Note : you shouldn't modify position and direction manually but use dedicated methods instead, to insure event raising.
     /// </summary>
     [Serializable]
     public class SplineNode {

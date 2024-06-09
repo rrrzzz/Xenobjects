@@ -31,10 +31,8 @@ namespace Code
             {
                 _camTr.rotation = Quaternion.Euler(camRot);
             }
-            Debug.Log(":noerm: " + rotNormalized);
 
             Tilt01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
-            Debug.Log(Tilt01);
         }
         
         protected override void UpdateTouchStatus()

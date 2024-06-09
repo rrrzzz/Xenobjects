@@ -52,8 +52,9 @@ namespace Code
                 if (_movingT > 0)
                 {
                     var elapsedDissolvingTime = dissolvingDuration * _movingT;
-                    _idleT = Mathf.InverseLerp(0, dataProvider.IdleDuration + elapsedDissolvingTime, 
-                        dissolvingDuration);
+
+                    _idleT = Mathf.InverseLerp(0, dissolvingDuration, 
+                        dataProvider.IdleDuration + elapsedDissolvingTime);
                 }
                 else if (dataProvider.IdleDuration > idleDurationThreshold)
                 {
@@ -69,7 +70,7 @@ namespace Code
                 
                 _movingT = 1 - Mathf.InverseLerp(0, dissolvingDuration, 
                     dataProvider.MovementDuration + elapsedAssemblyTime);
-                
+
                 _dissolveEffect.SetEffectByNormalizedValue(_movingT);
             }
         }

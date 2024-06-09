@@ -26,7 +26,7 @@ namespace SplineMesh {
 #endif
         /// <summary>
         /// The spline nodes.
-        /// Warning, this collection shouldn't be changed manualy. Use specific methods to add and remove nodes.
+        /// Warning, this collection shouldn't be changed manually. Use specific methods to add and remove nodes.
         /// It is public only for the user to enter exact values of position and direction in the inspector (and serialization purposes).
         /// </summary>
         public List<SplineNode> nodes = new List<SplineNode>();

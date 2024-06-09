@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEditor;
 
 [CustomEditor(typeof(PSMeshRendererUpdater))]
-public class MeshRendererEditor : Editor
+public class MeshRendererEditor : UnityEditor.Editor
 {
     public override void OnInspectorGUI()
     {

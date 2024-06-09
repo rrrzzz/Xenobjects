@@ -77,20 +77,13 @@ namespace Code
             var currentMovementStatus = movementDist > movementThreshold;
             if (currentMovementStatus == IsMoving) return;
             IsMoving = currentMovementStatus;
-            Debug.Log(IsMoving ? "MOVING" : "IDLE");
             
             if (isDebugInfoShown && movedTxt)
             {
                 movedTxt.text = IsMoving ? "MOVING" : "IDLE";
             }
-            if (!IsMoving)
-            {
-                MovementDuration = 0;
-            }
-            else
-            {
-                IdleDuration = 0;
-            }
+
+            IdleDuration = MovementDuration = 0;
             
             _movementStateStartTime = Time.realtimeSinceStartup;
         }

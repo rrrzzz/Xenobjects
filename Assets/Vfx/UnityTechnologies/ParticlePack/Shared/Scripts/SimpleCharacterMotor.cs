@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class SimpleCharacterMotor : MonoBehaviour
@@ -25,6 +22,8 @@ public class SimpleCharacterMotor : MonoBehaviour
     Vector3 movement, finalMovement;
     float speed;
     Quaternion targetRotation, targetPivotRotation;
+    bool _isFirstXNonZero = true;
+    bool _isFirstYNonZero = true;
 
 
     void Awake()
@@ -45,6 +44,17 @@ public class SimpleCharacterMotor : MonoBehaviour
     {
         var x = Input.GetAxis("Mouse Y");
         var y = Input.GetAxis("Mouse X");
+
+        if (Mathf.Abs(x) > 0.1f && _isFirstXNonZero)
+        {
+            _isFirstXNonZero = false;
+            return;
+        }
+        if (Mathf.Abs(y) > 0.1f && _isFirstYNonZero)
+        {
+            _isFirstYNonZero = false;
+            return;
+        }
 
         x *= invertY ? -1 : 1;
         targetRotation = transform.localRotation * Quaternion.AngleAxis(y * lookSpeed * Time.deltaTime, Vector3.up);
