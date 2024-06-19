@@ -384,7 +384,7 @@ public class PSMeshRendererUpdater : MonoBehaviour
             meshRenderer.sharedMaterials = AddToSharedMaterial(meshRenderer.sharedMaterials, meshMatEffect);
         }
 
-       // foreach (var skinMeshRenderer in skinMeshRenderers)
+        // foreach (var skinMeshRenderer in skinMeshRenderers)
         if(skinMeshRenderer!=null)
         {
             skinnedMaterials.Add(skinMeshRenderer.sharedMaterials);

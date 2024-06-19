@@ -30,6 +30,9 @@ namespace SplineMesh {
         public float startScale = 1;
 
         public float DurationInSecond;
+        public bool isGrowing;
+        public int zeroScaleCount;
+        public float scaleToZeroDuration = 3f;
 
         private void OnEnable() {
             rate = 0;
@@ -54,26 +57,38 @@ namespace SplineMesh {
         }
 
         void EditorUpdate() {
-            rate += Time.deltaTime / DurationInSecond;
-            if (rate > 1) {
-                rate --;
+            if (isGrowing)
+            {
+                rate += Time.deltaTime / DurationInSecond;
+                if (rate > 1) {
+                    rate --;
+                }
             }
+            
             Contort();
         }
 
-        private void Contort() {
+        private void Contort() 
+        {
             float nodeDistance = 0;
             int i = 0;
-            foreach (var n in spline.nodes) {
+            foreach (var n in spline.nodes) 
+            {
                 float nodeDistanceRate = nodeDistance / spline.Length;
                 float nodeScale = startScale * (rate - nodeDistanceRate);
-                n.Scale = new Vector2(nodeScale, nodeScale);
+
+                if (spline.nodes.IndexOf(n) < zeroScaleCount)
+                {
+                    n.Scale = new Vector2(nodeScale, nodeScale);
+                }
+
                 if (i < spline.curves.Count) {
                     nodeDistance += spline.curves[i++].Length;
                 }
             }
 
-            if (generated != null) {
+            if (generated != null) 
+            {
                 meshBender.SetInterval(spline, 0, spline.Length * rate);
                 meshBender.ComputeIfNeeded();
             }

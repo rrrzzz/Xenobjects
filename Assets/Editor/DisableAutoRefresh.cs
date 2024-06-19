@@ -1,5 +1,4 @@
 using System.IO;
-using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +8,8 @@ namespace Editor
     public static class DisableAutoRefresh
     {
         private static FileSystemWatcher _watcher;
+        private static FileSystemWatcher _watcher2;
+        private static FileSystemWatcher _watcher3;
         private static bool _needsRefresh;
         private static bool _wasRefreshCalled;
         private static bool _isInited;
@@ -23,20 +24,30 @@ namespace Editor
             EditorApplication.projectChanged += ProjectChanged;
             EditorApplication.playModeStateChanged += RecompileOnEnterEditMode;
             //Path.Combine(Application.dataPath, "Code")
-            _watcher = new FileSystemWatcher(Application.dataPath, "*.cs")
+            _watcher = CreateWatcher("*.cs");
+            _watcher2 = CreateWatcher("*.shader");
+            _watcher3 = CreateWatcher("*.asmdef");
+            
+            EditorApplication.LockReloadAssemblies();
+            _isInited = true;
+        }
+
+        private static FileSystemWatcher CreateWatcher(string extensionToWatch)
+        {
+            var watcher = new FileSystemWatcher(Application.dataPath, extensionToWatch)
             {
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                 IncludeSubdirectories = true
             };
         
-            _watcher.Changed += OnChanged;
-            _watcher.Created += OnChanged;
-            _watcher.Deleted += OnChanged;
-            _watcher.Renamed += OnChanged;
+            watcher.Changed += OnChanged;
+            watcher.Created += OnChanged;
+            watcher.Deleted += OnChanged;
+            watcher.Renamed += OnChanged;
         
-            _watcher.EnableRaisingEvents = true;
-            EditorApplication.LockReloadAssemblies();
-            _isInited = true;
+            watcher.EnableRaisingEvents = true;
+
+            return watcher;
         }
         
         private static void ProjectChanged()
