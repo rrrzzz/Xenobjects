@@ -26,7 +26,7 @@ namespace SplineMesh {
 #endif
         /// <summary>
         /// The spline nodes.
-        /// Warning, this collection shouldn't be changed manually. Use specific methods to add and remove nodes.
+        /// Warning, this collection shouldn't be changed manualy. Use specific methods to add and remove nodes.
         /// It is public only for the user to enter exact values of position and direction in the inspector (and serialization purposes).
         /// </summary>
         public List<SplineNode> nodes = new List<SplineNode>();
@@ -203,7 +203,6 @@ namespace SplineMesh {
             if (index == 0)
                 throw new Exception("Can't insert a node at index 0");
 
-            SplineNode previousNode = nodes[index - 1];
             SplineNode nextNode = nodes[index];
 
             nodes.Insert(index, node);
@@ -220,6 +219,78 @@ namespace SplineMesh {
             });
             UpdateAfterCurveChanged();
             updateLoopBinding();
+        }
+
+        /// <summary>
+        /// Split the spline by adding a node at the specific time
+        /// the tangents of previous and following node are modified
+        /// in order to not alter the curve shape.
+        ///
+        /// previous and next node tangent type become SplineNode.TangentType.Free
+        /// </summary>
+        /// <param name="time"></param>
+        public void SplitAtTime(float time)
+        {
+            if (time <= 0f || time >= (float)nodes.Count - 1)
+                throw new Exception($"Can't split at time {time}. Use a value between 0 and {(float)nodes.Count - 1}");
+
+            CurveSample timeSample = GetSample(time);
+            Vector3 newPointPosition = timeSample.location;
+
+
+            // percent position between two nodes
+            float percentage = time % 1;
+            int index = Mathf.FloorToInt(time);
+
+            /*
+             * P0 = starting point
+             * P3 = ending point
+             *
+             * P1 = P0 control point
+             * P2 = mirror of P3 control point (we need the inverse, not the real cp)
+             */
+
+            SplineNode startingNode = nodes[index];
+
+            Vector3 p0 = startingNode.Position;
+            Vector3 p1 = startingNode.DirectionOut;
+
+            SplineNode endingNode = nodes[index + 1];
+            Vector3 p3 = endingNode.Position;
+            Vector3 p2 = endingNode.DirectionIn;
+
+
+            // we need to find a positoin at percentage% between P0 and P1
+            Vector3 m0 = p0 + (p1 - p0) * percentage;
+            Vector3 m1 = p1 + (p2 - p1) * percentage;
+            Vector3 m2 = p2 + (p3 - p2) * percentage;
+
+            Vector3 newPointDirectionIn = m0 + (m1 - m0) * percentage;
+            Vector3 newPointDirectionOut = m1 + (m2 - m1) * percentage;
+
+            // create the new node with previous calculated params
+            SplineNode n = new SplineNode(newPointPosition, newPointDirectionOut, newPointDirectionIn); //time_sample.tangent);
+            n.DirectionType = SplineNode.TangentType.Free;
+
+
+            // we also need to alter the directionOut of the previous point
+            // its new direction is  m0
+            // in order to alter it, the tangent type must be free
+            if (nodes[index].DirectionType != SplineNode.TangentType.Free)
+            {
+                nodes[index].DirectionType = SplineNode.TangentType.Free;
+            }
+            nodes[index].DirectionOut = m0;
+
+            // we also need to alter the directionIn of the final point
+            // its new direction is  m2
+            // in order to alter it, the tangent type must be free
+            if (nodes[index + 1].DirectionType != SplineNode.TangentType.Free)
+            {
+                nodes[index + 1].DirectionType = SplineNode.TangentType.Free;
+            }
+            nodes[index + 1].DirectionIn = m2;
+            InsertNode(index + 1, n);
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using JetBrains.Annotations;
+using UnityEngine;
 
 namespace SplineMesh {
     /// <summary>
@@ -12,20 +14,60 @@ namespace SplineMesh {
     /// 
     /// You can easily imagine a list of scales to apply to each node independantly to create your own variation.
     /// </summary>
+    ///
+    [ExecuteAlways]
     [DisallowMultipleComponent]
     public class ExampleTentacle : MonoBehaviour {
-        private Spline spline { get => GetComponent<Spline>(); }
+        private Spline _spline { get => GetComponent<Spline>(); }
 
         public float startScale = 1, endScale = 1;
         public float startRoll = 0, endRoll = 0;
+        public float time = .5f;
+        public bool isSplitting;
+        public bool isSplittingAllAtIntervals;
 
-        private void OnValidate() {
+        private void Awake()
+        {
+            ReapplyScaleAndRoll();
+        }
+
+        private void OnValidate()
+        {
+            ReapplyScaleAndRoll();
+        }
+
+        void Update()
+        {
+            if (isSplitting)
+            {
+                _spline.SplitAtTime(time);
+                ReapplyScaleAndRoll();
+                isSplitting = false;
+            }
+            
+            // Debug.LogError($"splitting is {isSplittingAllAtIntervals} at time: {DateTime.Now.Minute}:{DateTime.Now.Second}");
+            if (isSplittingAllAtIntervals)
+            {
+                isSplittingAllAtIntervals = false;
+                var nodeCount = _spline.nodes.Count;
+                for (int i = 0; i < nodeCount - 1; i++)
+                {
+                    var t = i * 2 + .5f;
+                    _spline.SplitAtTime(t);
+                    ReapplyScaleAndRoll();
+                }
+            }
+        }
+        
+        private void ReapplyScaleAndRoll() 
+        {
             // apply scale and roll at each node
             float currentLength = 0;
-            foreach (CubicBezierCurve curve in spline.GetCurves()) {
-                float startRate = currentLength / spline.Length;
+            foreach (CubicBezierCurve curve in _spline.GetCurves()) 
+            {
+                float startRate = currentLength / _spline.Length;
                 currentLength += curve.Length;
-                float endRate = currentLength / spline.Length;
+                float endRate = currentLength / _spline.Length;
 
                 curve.n1.Scale = Vector2.one * (startScale + (endScale - startScale) * startRate);
                 curve.n2.Scale = Vector2.one * (startScale + (endScale - startScale) * endRate);
