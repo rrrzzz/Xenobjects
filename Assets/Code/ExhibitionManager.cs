@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Code.Effects;
+using SplineMesh;
 using UnityEngine;
 
 namespace Code
@@ -10,7 +11,9 @@ namespace Code
         public float idleDurationThreshold = 3;
         public float oscillationSpeed = 1;
         public MovementInteractionProviderBase dataProvider;
-        
+
+        private SplineMeshTiling _splineMeshTiling;
+        private ExampleTentacle _exampleTentacle;
         private OrbGlowingEffect _orbGlow = new OrbGlowingEffect();
         private DistortionEffect _distortion = new DistortionEffect();
         private DissolveEffect _dissolveEffect = new DissolveEffect();
@@ -21,11 +24,26 @@ namespace Code
     
         private void Start()
         {
-            _effects = new List<EffectBase>{_orbGlow, _distortion, _dissolveEffect};
+            _effects = new List<EffectBase>{_orbGlow, _distortion};
             dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
             dataProvider.ArObjectSetEvent.AddListener(SetMaterials);
+            dataProvider.ArObjectSetEvent.AddListener(SetTentacleComponents);
+            dataProvider.ShakeEvent.AddListener(ResetScaleAndTime);
         }
-        
+
+        private void ResetScaleAndTime()
+        {
+            _splineMeshTiling.resetScalingAndTime = true;
+            // _exampleTentacle.startScale += 0.001f;
+            // _exampleTentacle.ReapplyScaleAndRoll();
+        }
+
+        private void SetTentacleComponents()
+        {
+            _exampleTentacle = dataProvider.arObjectTr.GetComponentInChildren<ExampleTentacle>();
+            _splineMeshTiling = dataProvider.arObjectTr.GetComponentInChildren<SplineMeshTiling>();
+        }
+
         private void Update()
         {
             _orbGlow.SetEffectByNormalizedValue(dataProvider.DistanceToArObject01);   
@@ -36,7 +54,7 @@ namespace Code
                 _distortion.SetOscillatingEffect(oscillationSpeed);
             }
 
-            SetMovementChangingDissolution();
+            // SetMovementChangingDissolution();
         }
 
         private void SetMaterials()
@@ -77,6 +95,7 @@ namespace Code
 
         private void OnDoubleTouch()
         {
+            _splineMeshTiling.scaleToFull = !_splineMeshTiling.scaleToFull;
             _isTouchToggleOn = !_isTouchToggleOn;
             _distortion.ToggleOscillatingEffect();
         }
@@ -85,6 +104,7 @@ namespace Code
         {
             dataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
             dataProvider.ArObjectSetEvent.RemoveListener(SetMaterials);
+            dataProvider.ArObjectSetEvent.RemoveListener(SetTentacleComponents);
         }
     }
 }

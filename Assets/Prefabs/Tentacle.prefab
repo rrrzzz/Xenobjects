@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 3079288841647970161}
   - component: {fileID: 1802249072933481063}
   - component: {fileID: 6346389768356808818}
-  - component: {fileID: 3091200168267253765}
   m_Layer: 0
   m_Name: segment 1 mesh
   m_TagString: Untagged
@@ -97,28 +96,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8cda9ed2ad6a8b4781166236afc26b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!64 &3091200168267253765
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015483954438719596}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
 --- !u!1 &1678299686678223265
 GameObject:
   m_ObjectHideFlags: 0
@@ -146,7 +123,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1678299686678223265}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -3.15, y: 0, z: 5.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -289,14 +266,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mesh: {fileID: 4300000, guid: 500594a39d643774c8e028335ee33da7, type: 3}
   material: {fileID: 2100000, guid: b8c8701b896a8184e8974775b53a7fd7, type: 2}
-  physicMaterial: {fileID: 0}
   translation: {x: 0, y: 0, z: 0}
   rotation: {x: 0, y: 90, z: 0}
   scale: {x: 0.3, y: 0.3, z: 0.3}
-  generateCollider: 1
-  updateInPlayMode: 0
-  curveSpace: 1
-  mode: 2
+  startNodeIdx: 0
+  startScale: 2.65
+  endScale: 0.05
+  tMargin: 0
+  tMultiplier: 2
+  scaleSegment: 0
+  scaleToZero: 0
+  scaleDuration: 0
+  interpolationDuration: 3
+  resetScalingAndTime: 0
+  scaleToFull: 0
+  saveScales: 0
+  nodesAffected: 0
+  tThreshold: 0.2
+  interpolatePositionDir: 0
 --- !u!1 &1788396525358261530
 GameObject:
   m_ObjectHideFlags: 0
@@ -309,7 +296,6 @@ GameObject:
   - component: {fileID: 6266068458521124513}
   - component: {fileID: 3014619659434934536}
   - component: {fileID: 6334538981318920878}
-  - component: {fileID: 6632320477921688029}
   m_Layer: 0
   m_Name: segment 2 mesh
   m_TagString: Untagged
@@ -394,28 +380,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8cda9ed2ad6a8b4781166236afc26b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!64 &6632320477921688029
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1788396525358261530}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
 --- !u!1 &5577407752747858442
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,7 +392,6 @@ GameObject:
   - component: {fileID: 8368591959217609064}
   - component: {fileID: 2041961386234349059}
   - component: {fileID: 3670108978491234247}
-  - component: {fileID: 1551392832671451938}
   m_Layer: 0
   m_Name: segment 0 mesh
   m_TagString: Untagged
@@ -513,28 +476,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8cda9ed2ad6a8b4781166236afc26b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!64 &1551392832671451938
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5577407752747858442}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
 --- !u!1 &6522981334241975666
 GameObject:
   m_ObjectHideFlags: 0
@@ -547,7 +488,6 @@ GameObject:
   - component: {fileID: 3220580188660846839}
   - component: {fileID: 3036353935499610979}
   - component: {fileID: 839824554606662544}
-  - component: {fileID: 3077857251777999803}
   m_Layer: 0
   m_Name: segment 3 mesh
   m_TagString: Untagged
@@ -632,28 +572,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8cda9ed2ad6a8b4781166236afc26b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!64 &3077857251777999803
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6522981334241975666}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
 --- !u!1 &6887491654660774777
 GameObject:
   m_ObjectHideFlags: 0

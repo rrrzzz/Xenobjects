@@ -1,7 +1,8 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using UnityEngine;
+
 
 namespace SplineMesh 
 {
@@ -30,47 +31,31 @@ namespace SplineMesh
         public Vector3 rotation;
         [Tooltip("Scale to apply on the mesh before bending it.")]
         public Vector3 scale = Vector3.one;
-        [Tooltip("If true, the mesh will be bent on play mode. If false, the bent mesh will be kept from the editor mode, allowing lighting baking.")]
-        public bool updateInPlayMode;
 
-        [Tooltip("If true, a mesh will be placed on each curve of the spline. If false, a single mesh will be placed for the whole spline.")]
-        public bool curveSpace;
-
-        [Tooltip("The mode to use to fill the chosen interval with the bent mesh.")]
-        public MeshBender.FillingMode mode = MeshBender.FillingMode.StretchToInterval;
-
-        private float _elapsedTime;
+        // public int startNodeIdx;
+        // public float startScale = 2.65f;
+        // public float endScale = 0.05f;
         
-        public bool setClippingValues;
-        public float coordinate;
-        public float[] clippingValuesStart;
-        public float[] clippingValuesEnd;
-        public bool isInterpolatingClipping;
-        public Material[] materials;
-    
-        private static readonly int ClipEnd = Shader.PropertyToID("_ClipEnd");
-        public bool reassignMaterials;
-        public bool isRealTime;
-        private static readonly int ClipCoordinate = Shader.PropertyToID("_ClipCoordinate");
-
+        public AnimationCurve scaleCurve;
+        public bool killTween;
         public bool scaleToZero;
-        public float scaleDuration;
+        public float scaleDuration = 2;
+        // public float interpolationDuration;
         public bool resetScalingAndTime;
         public bool scaleToFull;
         public bool saveScales;
         public int nodesAffected;
-        public float tThreshold = 0.2f;
-        public bool resetMaterials;
-        public bool interpolatePositionDir;
+        public float delayInterval = 0.01f;
+        // public bool interpolatePositionDir;
         
-        private float _initialLength;
+        private bool _isScalesSaved;
         private List<Vector2> _initialScales = new List<Vector2>();
         private Vector3 _nodeStartPos = new Vector3(3.985474f, 5.676583f, -11.20474f);
         private Vector3 _nodeEndPos = new Vector3(3.985474f, 5.676583f, -6.954725f);
         private Vector3 _nodeStartDir = new Vector3(3.921951f, 5.766486f, -10.64462f);
         private Vector3 _nodeEndDir = new Vector3(3.921951f, 5.766486f, -6.509478f);
-        
-        private void OnEnable() 
+
+        private void OnEnable()
         {
             // tip : if you name all generated content in the same way, you can easily find all of it
             // at once in the scene view, with a single search.
@@ -80,9 +65,15 @@ namespace SplineMesh
 
             spline = GetComponentInParent<Spline>();
             spline.NodeListChanged += (_, _) => toUpdate = true;
+            
+            _nodeStartPos = spline.nodes[0].Position;
+            _nodeStartDir = spline.nodes[0].Direction;
+            _nodeEndPos = spline.nodes[1].Position;
+            _nodeEndDir = spline.nodes[1].Direction;
 
             toUpdate = true;
             _initialScales.Clear();
+            
             foreach (var n in spline.nodes)
             {
                 if (Mathf.Approximately(n.Scale.x, 0))
@@ -91,7 +82,7 @@ namespace SplineMesh
                 }
                 _initialScales.Add(n.Scale);
             }
-            saveScales = false;
+            saveScales = false; 
         }
 
         private void OnValidate() 
@@ -102,136 +93,125 @@ namespace SplineMesh
 
         private void Update() 
         {
-            // we can prevent the generated content to be updated during playmode to preserve baked data saved in the scene
-            // if (!updateInPlayMode && Application.isPlaying) return;
+            if (killTween)
+            {
+                DOTween.Kill(1488);
+                killTween = false;
+            }
+
             if (saveScales || _initialScales.Count == 0)
             {
-                _initialLength = spline.Length;
+                saveScales = false;
                 _initialScales.Clear();
                 foreach (var n in spline.nodes)
                 {
                     _initialScales.Add(n.Scale);
                 }
-                saveScales = false;
             }
-            if (toUpdate) {
+            
+            if (toUpdate) 
+            {
                 toUpdate = false;
                 CreateMeshes();
             }
 
             if (resetScalingAndTime)
             {
+                resetScalingAndTime = false;
+
+                if (!_isScalesSaved)
+                {
+                    _isScalesSaved = true;
+                    _initialScales.Clear();
+                    foreach (var n in spline.nodes)
+                    {
+                        _initialScales.Add(n.Scale);
+                    }
+                }
+                
+                spline.nodes[0].Position = _nodeStartPos;
+                spline.nodes[0].Direction = _nodeStartDir;
+
                 for (int i = 0; i < _initialScales.Count; i++)
                 {
-                    if (scaleToFull)
-                    {
-                        spline.nodes[i].Scale = Vector2.zero;
-                        continue;
-                    }
                     spline.nodes[i].Scale = _initialScales[i];
                 }
-
-                spline.Length = _initialLength;
-                _elapsedTime = 0;
-                resetScalingAndTime = false;
             }
 
             if (scaleToFull || scaleToZero)
             {
-                ScaleTo();
+                ScaleSpline();
             }
 
-            if (interpolatePositionDir)
-            {
-                float t = _elapsedTime / scaleDuration;
-                var node = spline.nodes[1];
-                node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, t);
-                node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, t);
-            }
-
-            if (resetMaterials)
-            {
-                CreateMeshes();
-                resetMaterials = false;
-            }
-
-            ProcessClipping();
+            // if (interpolatePositionDir)
+            // {
+            //     if (!_startedThings)
+            //     {
+            //         _startTime = Time.realtimeSinceStartup;
+            //         _startedThings = true;
+            //         _nodeStartPos = spline.nodes[0].Position;
+            //         _nodeStartDir = spline.nodes[0].Direction;
+            //         _nodeEndPos = spline.nodes[1].Position;
+            //         _nodeEndDir = spline.nodes[1].Direction;
+            //     }
+            //     
+            //     var elapsedTime = Time.realtimeSinceStartup - _startTime;
+            //     float t = elapsedTime / scaleDuration;
+            //     var node = spline.nodes[0];
+            //     node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, t);
+            //     node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, t);
+            // }
         }
 
-        private void ProcessClipping()
+        void KillTween()
         {
-            if (reassignMaterials)
-            {
-                var renderers = GetComponentsInChildren<MeshRenderer>();
-                materials = renderers.Select(r => r.material).ToArray();
-                reassignMaterials = false;
-            }
-        
-            if (!setClippingValues && !isRealTime)
-            {
-                return;
-            }
-        
-            for (int i = 0; i < clippingValuesStart.Length; i++)
-            {
-                if (i >= materials.Length)
-                {
-                    break;
-                }
-
-                if (isInterpolatingClipping)
-                {
-                    float t = _elapsedTime / scaleDuration;
-                    var start = clippingValuesStart[i];
-                    var end = clippingValuesEnd[i];
-                    materials[i].SetFloat(ClipEnd, Mathf.Lerp(start, end, t));
-                }
-                else
-                {
-                    materials[i].SetFloat(ClipEnd, clippingValuesStart[i]);
-                    materials[i].SetFloat(ClipCoordinate, coordinate);
-                }
-            }
-
-            setClippingValues = false;
+            DOTween.Kill(1488);
         }
-
-        private void ScaleTo()
+        
+        private void ScaleSpline()
         {
-            _elapsedTime += Time.deltaTime;
-
-            var ts = new float[spline.nodes.Count];
+            DOTween.Kill(1488);
                 
             for (int i = 0; i < spline.nodes.Count; i++)
             {
-                float t = _elapsedTime / scaleDuration;
-                
-                if (i > 0 && ts[i - 1] > tThreshold)
+                if (!scaleToZero)
                 {
-                    t = ts[i - 1] - tThreshold;
-                    ts[i] = t;
+                    spline.nodes[i].Scale = Vector2.zero;
                 }
-                else if (i > 0 && ts[i - 1] < tThreshold)
-                {
-                    t = 0;
-                }
+            }
                 
-                ts[i] = t;
-                
-                if (i >= nodesAffected)
+            for (int i = 0; i < spline.nodes.Count; i++)
+            {
+                if (i > nodesAffected && nodesAffected != 0)
                 {
-                    continue;
+                    break;
                 }
-
+                    
+                var i1 = i;
                 if (scaleToZero)
                 {
-                    spline.nodes[i].Scale = Vector2.Lerp(spline.nodes[i].Scale, Vector2.zero, t);
+                    DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, Vector2.zero,
+                            scaleDuration)
+                        .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
                 }
                 else
                 {
-                    spline.nodes[i].Scale = Vector2.Lerp(Vector2.zero, _initialScales[i], t);
+                    DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, _initialScales[i1],
+                            scaleDuration)
+                        .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
                 }
+                // DOVirtual.DelayedCall(killDelay, () => KillTween());
             }
+            scaleToFull = scaleToZero = false;
+
+            // if (interpolatePositionDir)
+            // {
+            //     float tInterpol = Mathf.Clamp(elapsedTime / interpolationDuration, 0, 0.5f);
+            //
+            //     var node = spline.nodes[0];
+            //     node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, tInterpol);
+            //     node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, tInterpol);
+            // }
         }
 
         private void CreateMeshes() 
@@ -250,8 +230,6 @@ namespace SplineMesh
                 go.GetComponent<MeshBender>().SetInterval(curve);
                 used.Add(go);
             }
-            
-            
 
             // we destroy the unused objects. This is classic pooling to recycle game objects.
             foreach (var go in generated.transform
@@ -273,7 +251,7 @@ namespace SplineMesh
                     typeof(MeshFilter),
                     typeof(MeshRenderer),
                     typeof(MeshBender));
-                res.isStatic = !updateInPlayMode;
+                res.isStatic = false;
             } 
             else 
             {
@@ -281,23 +259,57 @@ namespace SplineMesh
             }
             
             var meshRenderer = res.GetComponent<MeshRenderer>();
-            if (!meshRenderer.material || resetMaterials)
-            {
-                meshRenderer.material = material;
-            }
-            else if (!meshRenderer.material.name.Contains(material.name))
-            {
-                meshRenderer.material = material;
-            }
-            
+            meshRenderer.material = material;
             MeshBender mb = res.GetComponent<MeshBender>();
            
             mb.Source = SourceMesh.Build(mesh)
                 .Translate(translation)
                 .Rotate(Quaternion.Euler(rotation))
                 .Scale(scale);
-            mb.Mode = mode;
+            mb.Mode = MeshBender.FillingMode.StretchToInterval;
             return res;
         }
+        
+        // private void ScaleSegment()
+        // {
+        //     if (!_startedThings)
+        //     {
+        //         _segmentsScales[0] = Vector2.one * startScale;
+        //         _segmentsScales[1] = Vector2.one * ((startScale + endScale) / 2);
+        //         _segmentsScales[2] = Vector2.one * endScale;
+        //         _startedThings = true;
+        //         _startTime = Time.realtimeSinceStartup;
+        //     }
+        //     
+        //     var elapsedTime = Time.realtimeSinceStartup - _startTime;
+        //
+        //     var ts = new float[spline.nodes.Count];
+        //
+        //     for (int i = startNodeIdx; i < startNodeIdx + 3; i++)
+        //     {
+        //         var t = elapsedTime / scaleDuration;
+        //
+        //         if (i > startNodeIdx && ts[i - 1] > tThreshold)
+        //         {
+        //             t = ts[i - 1] - tThreshold;
+        //             ts[i] = t;
+        //         }
+        //         else if (i > startNodeIdx && ts[i - 1] < tThreshold)
+        //         {
+        //             t = 0;
+        //         }
+        //         
+        //         ts[i] = t;
+        //
+        //         if (scaleToZero && i != 2)
+        //         {
+        //             spline.nodes[i].Scale = Vector2.Lerp(Vector2.one * _segmentsScales[i - startNodeIdx], Vector2.zero, t);
+        //         }
+        //         else
+        //         {
+        //             spline.nodes[i].Scale = Vector2.Lerp(Vector2.zero, _segmentsScales[i - startNodeIdx], t);
+        //         }
+        //     }
+        // }
     }
 }
