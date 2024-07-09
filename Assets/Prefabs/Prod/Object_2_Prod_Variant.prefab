@@ -68,6 +68,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3262252212903636634, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2432090755550338912, guid: 3f4699d1df9685d46b0a8bb5683981d7, type: 3}
     - target: {fileID: 3372994828266122966, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: m_Name
       value: Object_2_Prod_Variant

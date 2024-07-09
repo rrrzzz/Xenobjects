@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using EasyButtons;
 using UnityEngine;
-using UnityEngine.Events;
+
 
 namespace SplineMesh {
     [DisallowMultipleComponent]
@@ -17,24 +15,43 @@ namespace SplineMesh {
                 return spline;
             }
         }
-
+        
+        public bool autoApply;
+        public int smoothCountFromEnd = 0;
         [Range(0, 1f)] public float curvature = 0.3f;
-
-        private void OnValidate() {
-            SmoothAll();
-        }
-
-        private void OnEnable() {
-            Spline.NodeListChanged += Spline_NodeListChanged;
-            foreach(var node in Spline.nodes) {
-                node.Changed += OnNodeChanged;
+        
+        public void OnValidate()
+        {
+            if (autoApply)
+            {
+                SmoothRange();
             }
-            SmoothAll();
+        }
+        
+        [Button]
+        private void SmoothRange()
+        {
+            var firstNodeToSmooth = Spline.nodes.Count - smoothCountFromEnd;
+            firstNodeToSmooth = firstNodeToSmooth < 0 ? 0 : firstNodeToSmooth;
+            for (int i = firstNodeToSmooth; i < Spline.nodes.Count; i++)
+            {
+                SmoothNode(Spline.nodes[i]);
+            }
+        }
+        
+        [Button]
+        private void SmoothNodesOnChange() {
+            Spline.NodeListChanged += Spline_NodeListChanged;
+            for (int i = smoothCountFromEnd; i < Spline.nodes.Count; i++)
+            {
+                Spline.nodes[i].Changed += OnNodeChanged;
+            }
         }
 
         private void OnDisable() {
             Spline.NodeListChanged -= Spline_NodeListChanged;
-            foreach (var node in Spline.nodes) {
+            foreach (var node in Spline.nodes) 
+            {
                 node.Changed -= OnNodeChanged;
             }
         }
@@ -95,13 +112,6 @@ namespace SplineMesh {
 
             // We only set one direction at each spline node because SplineMesh only support mirrored direction between curves.
             node.Direction = controlPoint;
-        }
-
-
-        private void SmoothAll() {
-            foreach(var node in Spline.nodes) {
-                SmoothNode(node);
-            }
         }
     }
 }

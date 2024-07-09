@@ -33,7 +33,7 @@ namespace Code
 
         private void ResetScaleAndTime()
         {
-            _splineMeshTiling.resetScalingAndTime = true;
+            _splineMeshTiling.ResetScalingAndPositions();
             // _exampleTentacle.startScale += 0.001f;
             // _exampleTentacle.ReapplyScaleAndRoll();
         }
@@ -95,7 +95,7 @@ namespace Code
 
         private void OnDoubleTouch()
         {
-            _splineMeshTiling.scaleToFull = !_splineMeshTiling.scaleToFull;
+            _splineMeshTiling.ScaleToFull();
             _isTouchToggleOn = !_isTouchToggleOn;
             _distortion.ToggleOscillatingEffect();
         }

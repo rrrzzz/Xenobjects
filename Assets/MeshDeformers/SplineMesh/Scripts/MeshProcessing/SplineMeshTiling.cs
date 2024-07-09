@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using EasyButtons;
 using UnityEngine;
 
 
@@ -37,23 +38,23 @@ namespace SplineMesh
         // public float endScale = 0.05f;
         
         public AnimationCurve scaleCurve;
+        public Transform orb;
         public bool killTween;
-        public bool scaleToZero;
+        public bool isInterpolating;
+        public float interpolationDuration;
         public float scaleDuration = 2;
-        // public float interpolationDuration;
-        public bool resetScalingAndTime;
-        public bool scaleToFull;
-        public bool saveScales;
         public int nodesAffected;
         public float delayInterval = 0.01f;
-        // public bool interpolatePositionDir;
+        public Vector3 nodeEndPos;
+        public Vector3 orbEndPos;
         
+        private Vector3 _orbScale;
         private bool _isScalesSaved;
         private List<Vector2> _initialScales = new List<Vector2>();
-        private Vector3 _nodeStartPos = new Vector3(3.985474f, 5.676583f, -11.20474f);
-        private Vector3 _nodeEndPos = new Vector3(3.985474f, 5.676583f, -6.954725f);
-        private Vector3 _nodeStartDir = new Vector3(3.921951f, 5.766486f, -10.64462f);
-        private Vector3 _nodeEndDir = new Vector3(3.921951f, 5.766486f, -6.509478f);
+        private Vector3 _nodeStartPos;
+        private Vector3 _nodeStartDir;
+        private Vector3 _nodeEndDir;
+        private Vector3 _orbStartPos;
 
         private void OnEnable()
         {
@@ -65,11 +66,6 @@ namespace SplineMesh
 
             spline = GetComponentInParent<Spline>();
             spline.NodeListChanged += (_, _) => toUpdate = true;
-            
-            _nodeStartPos = spline.nodes[0].Position;
-            _nodeStartDir = spline.nodes[0].Direction;
-            _nodeEndPos = spline.nodes[1].Position;
-            _nodeEndDir = spline.nodes[1].Direction;
 
             toUpdate = true;
             _initialScales.Clear();
@@ -82,15 +78,19 @@ namespace SplineMesh
                 }
                 _initialScales.Add(n.Scale);
             }
-            saveScales = false; 
-        }
 
+            if (orb)
+            {
+                _orbScale = orb.localScale;
+            }
+        }
+        
         private void OnValidate() 
         {
             if (!spline) return;
             toUpdate = true;
         }
-
+        
         private void Update() 
         {
             if (killTween)
@@ -98,86 +98,46 @@ namespace SplineMesh
                 DOTween.Kill(1488);
                 killTween = false;
             }
-
-            if (saveScales || _initialScales.Count == 0)
-            {
-                saveScales = false;
-                _initialScales.Clear();
-                foreach (var n in spline.nodes)
-                {
-                    _initialScales.Add(n.Scale);
-                }
-            }
             
             if (toUpdate) 
             {
                 toUpdate = false;
                 CreateMeshes();
             }
-
-            if (resetScalingAndTime)
-            {
-                resetScalingAndTime = false;
-
-                if (!_isScalesSaved)
-                {
-                    _isScalesSaved = true;
-                    _initialScales.Clear();
-                    foreach (var n in spline.nodes)
-                    {
-                        _initialScales.Add(n.Scale);
-                    }
-                }
-                
-                spline.nodes[0].Position = _nodeStartPos;
-                spline.nodes[0].Direction = _nodeStartDir;
-
-                for (int i = 0; i < _initialScales.Count; i++)
-                {
-                    spline.nodes[i].Scale = _initialScales[i];
-                }
-            }
-
-            if (scaleToFull || scaleToZero)
-            {
-                ScaleSpline();
-            }
-
-            // if (interpolatePositionDir)
-            // {
-            //     if (!_startedThings)
-            //     {
-            //         _startTime = Time.realtimeSinceStartup;
-            //         _startedThings = true;
-            //         _nodeStartPos = spline.nodes[0].Position;
-            //         _nodeStartDir = spline.nodes[0].Direction;
-            //         _nodeEndPos = spline.nodes[1].Position;
-            //         _nodeEndDir = spline.nodes[1].Direction;
-            //     }
-            //     
-            //     var elapsedTime = Time.realtimeSinceStartup - _startTime;
-            //     float t = elapsedTime / scaleDuration;
-            //     var node = spline.nodes[0];
-            //     node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, t);
-            //     node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, t);
-            // }
         }
 
-        void KillTween()
+        [Button]
+        public void ScaleToFull()
         {
-            DOTween.Kill(1488);
+            ScaleSpline(true);
+            
+            if (isInterpolating)
+            {
+                InterpolatePosDir();
+            }
         }
         
-        private void ScaleSpline()
+        [Button]
+        public void ScaleToZero()
+        {
+            ScaleSpline(false);
+        }
+        
+        private void ScaleSpline(bool scaleToFull)
         {
             DOTween.Kill(1488);
-                
+            orb.localScale = _orbScale;
             for (int i = 0; i < spline.nodes.Count; i++)
             {
-                if (!scaleToZero)
+                if (scaleToFull)
                 {
                     spline.nodes[i].Scale = Vector2.zero;
                 }
+            }
+
+            if (scaleToFull && orb)
+            {
+                orb.DOScale(Vector3.zero, scaleDuration).SetDelay(scaleDuration / 2);
             }
                 
             for (int i = 0; i < spline.nodes.Count; i++)
@@ -188,22 +148,24 @@ namespace SplineMesh
                 }
                     
                 var i1 = i;
-                if (scaleToZero)
+                
+                if (scaleToFull)
                 {
-                    DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, Vector2.zero,
-                            scaleDuration)
-                        .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
+                    
+                    DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, _initialScales[i1],
+                        scaleDuration).SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488); 
                 }
                 else
                 {
-                    DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, _initialScales[i1],
-                            scaleDuration)
-                        .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
+                    {
+                        DOTween.To(() => spline.nodes[i1].Scale, x => spline.nodes[i1].Scale = x, Vector2.zero,
+                                scaleDuration)
+                            .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
+                    }
                 }
                 // DOVirtual.DelayedCall(killDelay, () => KillTween());
             }
-            scaleToFull = scaleToZero = false;
-
+            
             // if (interpolatePositionDir)
             // {
             //     float tInterpol = Mathf.Clamp(elapsedTime / interpolationDuration, 0, 0.5f);
@@ -212,6 +174,95 @@ namespace SplineMesh
             //     node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, tInterpol);
             //     node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, tInterpol);
             // }
+        }
+        
+        [Button]
+        private void SaveStartDirPos()
+        {
+            _nodeStartPos = spline.nodes[0].Position;
+            _nodeStartDir = spline.nodes[0].Direction;
+            
+            if (orb)
+            {
+                _orbStartPos = orb.position;
+            }
+        }
+        
+        [Button]
+        private void SaveEndDirPos()
+        {
+            nodeEndPos = spline.nodes[0].Position;
+            _nodeEndDir = spline.nodes[0].Direction;
+            
+            if (orb)
+            {
+                orbEndPos = orb.position;
+            }
+        }
+
+        [Button]
+        private void InterpolatePosDir()
+        {
+            DOTween.To(() => spline.nodes[0].Position, x => spline.nodes[0].Position = x, nodeEndPos,
+                interpolationDuration).SetId(1488);
+            
+            DOTween.To(() => spline.nodes[0].Direction, x => spline.nodes[0].Direction = x, _nodeEndDir,
+                interpolationDuration).SetId(1488);
+            
+            if (orb)
+            {
+                orb.DOMove(orbEndPos, interpolationDuration).SetDelay(scaleDuration / 2).SetId(1488);
+            }
+        }
+
+        [Button]
+        private void SaveScales()
+        {
+            if (orb)
+            {
+                _orbScale = orb.localScale;
+            }
+
+            if (_initialScales.Count != 0) return;
+            
+            _initialScales.Clear();
+            foreach (var n in spline.nodes)
+            {
+                _initialScales.Add(n.Scale);
+            }
+        }
+        
+        [Button]
+        public void ResetScalingAndPositions()
+        {
+            if (!_isScalesSaved)
+            {
+                _isScalesSaved = true;
+                _initialScales.Clear();
+                foreach (var n in spline.nodes)
+                {
+                    _initialScales.Add(n.Scale);
+                }
+            }
+            
+            spline.nodes[0].Position = _nodeStartPos;
+            spline.nodes[0].Direction = _nodeStartDir;
+
+            for (int i = 0; i < _initialScales.Count; i++)
+            {
+                spline.nodes[i].Scale = _initialScales[i];
+            }
+
+            if (orb)
+            {
+                orb.transform.localScale = _orbScale;
+                orb.transform.position = _orbStartPos;
+            }
+        }
+
+        void KillTween()
+        {
+            DOTween.Kill(1488);
         }
 
         private void CreateMeshes() 

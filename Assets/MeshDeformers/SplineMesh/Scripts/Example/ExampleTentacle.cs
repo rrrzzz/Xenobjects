@@ -17,18 +17,21 @@ namespace SplineMesh {
     ///
     [ExecuteAlways]
     [DisallowMultipleComponent]
-    public class ExampleTentacle : MonoBehaviour {
-        private Spline _spline { get => GetComponent<Spline>(); }
-
+    public class ExampleTentacle : MonoBehaviour
+    {
         public float startScale = 1, endScale = 1;
         public float startRoll = 0, endRoll = 0;
         public float time = .5f;
         public bool isSplitting;
         public bool isSplittingAllAtIntervals;
 
-        private void Awake()
+        private Spline _spline;
+
+        private void OnEnable()
         {
             ReapplyScaleAndRoll();
+            _spline = GetComponent<Spline>();
+            _spline.NodeListChanged += ReapplyScaleAndRoll;
         }
 
         private void OnValidate()
@@ -36,7 +39,7 @@ namespace SplineMesh {
             ReapplyScaleAndRoll();
         }
 
-        void Update()
+        private void Update()
         {
             if (isSplitting)
             {
@@ -59,8 +62,12 @@ namespace SplineMesh {
             }
         }
         
-        private void ReapplyScaleAndRoll() 
+        private void ReapplyScaleAndRoll(object sender = null, ListChangedEventArgs<SplineNode> args= null) 
         {
+            if (_spline == null)
+            {
+                return;
+            }
             // apply scale and roll at each node
             float currentLength = 0;
             foreach (CubicBezierCurve curve in _spline.GetCurves()) 
@@ -75,6 +82,11 @@ namespace SplineMesh {
                 curve.n1.Roll = startRoll + (endRoll - startRoll) * startRate;
                 curve.n2.Roll = startRoll + (endRoll - startRoll) * endRate;
             }
+        }
+
+        private void OnDisable()
+        {
+            _spline.NodeListChanged -= ReapplyScaleAndRoll;
         }
     }
 }
