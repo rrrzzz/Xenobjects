@@ -41,12 +41,14 @@ namespace SplineMesh
         public Transform orb;
         public bool killTween;
         public bool isInterpolating;
+        public bool isInterpolatingSpline;
         public float interpolationDuration;
         public float scaleDuration = 2;
         public int nodesAffected;
         public float delayInterval = 0.01f;
         public Vector3 nodeEndPos;
         public Vector3 orbEndPos;
+        public float orbScalingDelay;
         
         private Vector3 _orbScale;
         private bool _isScalesSaved;
@@ -54,7 +56,7 @@ namespace SplineMesh
         private Vector3 _nodeStartPos;
         private Vector3 _nodeStartDir;
         private Vector3 _nodeEndDir;
-        private Vector3 _orbStartPos;
+        public Vector3 orbStartPos;
 
         private void OnEnable()
         {
@@ -78,6 +80,9 @@ namespace SplineMesh
                 }
                 _initialScales.Add(n.Scale);
             }
+            
+            _nodeStartPos = spline.nodes[0].Position;
+            _nodeStartDir = spline.nodes[0].Direction;
 
             if (orb)
             {
@@ -125,7 +130,6 @@ namespace SplineMesh
         
         private void ScaleSpline(bool scaleToFull)
         {
-            DOTween.Kill(1488);
             orb.localScale = _orbScale;
             for (int i = 0; i < spline.nodes.Count; i++)
             {
@@ -137,7 +141,7 @@ namespace SplineMesh
 
             if (scaleToFull && orb)
             {
-                orb.DOScale(Vector3.zero, scaleDuration).SetDelay(scaleDuration / 2);
+                orb.DOScale(Vector3.zero, scaleDuration).SetDelay(orbScalingDelay);
             }
                 
             for (int i = 0; i < spline.nodes.Count; i++)
@@ -163,17 +167,7 @@ namespace SplineMesh
                             .SetEase(scaleCurve).SetDelay(delayInterval * i).SetId(1488);
                     }
                 }
-                // DOVirtual.DelayedCall(killDelay, () => KillTween());
             }
-            
-            // if (interpolatePositionDir)
-            // {
-            //     float tInterpol = Mathf.Clamp(elapsedTime / interpolationDuration, 0, 0.5f);
-            //
-            //     var node = spline.nodes[0];
-            //     node.Position = Vector3.Lerp(_nodeStartPos, _nodeEndPos, tInterpol);
-            //     node.Direction = Vector3.Lerp(_nodeStartDir, _nodeEndDir, tInterpol);
-            // }
         }
         
         [Button]
@@ -184,7 +178,7 @@ namespace SplineMesh
             
             if (orb)
             {
-                _orbStartPos = orb.position;
+                orbStartPos = orb.position;
             }
         }
         
@@ -203,15 +197,21 @@ namespace SplineMesh
         [Button]
         private void InterpolatePosDir()
         {
-            DOTween.To(() => spline.nodes[0].Position, x => spline.nodes[0].Position = x, nodeEndPos,
-                interpolationDuration).SetId(1488);
+            orb.position = orbStartPos;
+            orb.localScale = _orbScale;
             
-            DOTween.To(() => spline.nodes[0].Direction, x => spline.nodes[0].Direction = x, _nodeEndDir,
-                interpolationDuration).SetId(1488);
+            if (isInterpolatingSpline)
+            {
+                DOTween.To(() => spline.nodes[0].Position, x => spline.nodes[0].Position = x, nodeEndPos,
+                    interpolationDuration).SetId(1488);
+                
+                DOTween.To(() => spline.nodes[0].Direction, x => spline.nodes[0].Direction = x, _nodeEndDir,
+                    interpolationDuration).SetId(1488);
+            }
             
             if (orb)
             {
-                orb.DOMove(orbEndPos, interpolationDuration).SetDelay(scaleDuration / 2).SetId(1488);
+                orb.DOMove(orbEndPos, interpolationDuration).SetDelay(orbScalingDelay).SetId(1488);
             }
         }
 
@@ -245,6 +245,7 @@ namespace SplineMesh
                 }
             }
             
+            
             spline.nodes[0].Position = _nodeStartPos;
             spline.nodes[0].Direction = _nodeStartDir;
 
@@ -256,7 +257,7 @@ namespace SplineMesh
             if (orb)
             {
                 orb.transform.localScale = _orbScale;
-                orb.transform.position = _orbStartPos;
+                orb.transform.position = orbStartPos;
             }
         }
 
