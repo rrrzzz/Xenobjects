@@ -9,7 +9,6 @@ namespace Code.Effects
         
         public DissolveEffect()
         {
-            MaterialName = "Dissolve";
             ShaderID_1 = Shader.PropertyToID("_cutoff");
             IsUsingFloat = true;
             MinFloat = DissolveMin;

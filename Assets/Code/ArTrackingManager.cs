@@ -37,7 +37,7 @@ public class ArTrackingManager : MonoBehaviour
             spawnedContent = Instantiate(contentPrefab, _trackedImg.transform);
             isSpawned = true;
 
-            dataProvider.SetArObjectTransform(spawnedContent.transform);
+            dataProvider.SetArObject2Transform(spawnedContent.transform);
         }
 
         if (eventArgs.removed.Count != 0)

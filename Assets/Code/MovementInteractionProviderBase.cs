@@ -50,10 +50,10 @@ namespace Code
             UpdateShakeStatus();
         }
         
-        public void SetArObjectTransform(Transform arObjectTransform)
+        public void SetArObject2Transform(Transform arObjectTransform)
         {
             arObjectTr = arObjectTransform;
-            ArObjectSetEvent.Invoke();
+            arObjectTr.GetComponentInChildren<ArObject2Manager>().dataProvider = this;
         }
 
         private void UpdateMovementStatus()

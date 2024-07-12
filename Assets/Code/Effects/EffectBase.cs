@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 namespace Code.Effects
 {
@@ -7,29 +11,64 @@ namespace Code.Effects
     {
         protected int ShaderID_1;
         protected int ShaderID_2;
-        
-        protected Material Material;
+
         protected string MaterialName;
+        protected List<Material> Materials = new List<Material>();
         protected Vector4 MinVec4;
         protected Vector4 MaxVec4;
         protected float MinFloat;
         protected float MaxFloat;
         protected bool IsUsingFloat;
         
-        public void SetMaterial(Transform objectTransform)
+        public void SetMaterial(GameObject go)
         {
-            var rend = objectTransform.GetComponentsInChildren<Renderer>()
-                .First(x => x.material.name.Contains(MaterialName));
+            if (string.IsNullOrEmpty(MaterialName))
+            {
+                Materials = go.GetComponentsInChildren<Renderer>().Select(x => x.material).ToList();
+            }
+            else
+            {
+                var renderers = go.GetComponentsInChildren<Renderer>();
+                foreach (var renderer in renderers)
+                {
+                    foreach (var material in renderer.materials)
+                    {
+                        if (material.name.Contains(MaterialName))
+                        {
+                            Materials.Add(material);
+                        }
+                    }     
+                }
+            }
+        }
+
+        public void FadeAlpha(float duration, bool isFadeOut)
+        {
+            foreach (var material in Materials)
+            {
+                var color = material.GetColor(ShaderID_1);
+                color.a = isFadeOut ? 0 : 1;
+                material.DOColor(color, ShaderID_1, duration);
+            }
+        }
         
-            Material = rend.material;
+        public void FadeEffect(float fadeTime)
+        {
+            foreach (var material in Materials)
+            {
+                if (IsUsingFloat)
+                {
+                    material.DOFloat(MinFloat, ShaderID_1, fadeTime);
+                }
+                else
+                {
+                    material.DOVector(MinVec4, ShaderID_1, fadeTime);
+                }
+            }
         }
 
         public void SetEffectByNormalizedValue(float t)
         {
-            if (!Material)
-            {
-                return;
-            }
             
             if (IsUsingFloat)
             {
@@ -44,14 +83,19 @@ namespace Code.Effects
         private void SetInterpolatedVal(Vector4 min, Vector4 max, float t)
         {
             var interpolatedVal = Vector4.Lerp(min, max, t);
-            Material.SetVector(ShaderID_1, interpolatedVal);
+            foreach (var material in Materials)
+            {
+                material.SetVector(ShaderID_1, interpolatedVal);
+            }
         }
     
         private void SetInterpolatedVal(float min, float max, float t)
         {
             var interpolatedVal = Mathf.Lerp(min, max, t);
-            var id = Shader.PropertyToID("_Distortion");
-            Material.SetFloat(ShaderID_1, interpolatedVal);
+            foreach (var material in Materials)
+            {
+                material.SetFloat(ShaderID_1, interpolatedVal);
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ namespace Code
         private const float LowPassFilterFactor = 0.0166f;
         
         private Vector3 _lowPassValue;
-
         
         protected override void Start()
         {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Code.Effects
@@ -13,7 +14,6 @@ namespace Code.Effects
         
         public DistortionEffect()
         {
-            MaterialName = "Water_MeshEffect";
             ShaderID_1 = Shader.PropertyToID("_Distortion");
             ShaderID_2 = Shader.PropertyToID("_RefractiveStrength");
             IsUsingFloat = true;
@@ -26,7 +26,19 @@ namespace Code.Effects
             var t = _oscillationTimer.ElapsedMilliseconds / 1000f * oscillationSpeed;
 
             var val = Mathf.Sin(t);
-            Material.SetFloat(ShaderID_2, val);
+            foreach (var material in Materials)
+            {
+                material.SetFloat(ShaderID_2, val);
+            }
+        }
+
+        public void FadeEffects(float fadeTime)
+        {
+            foreach (var material in Materials)
+            {
+                material.DOFloat(0, ShaderID_1, fadeTime);
+                material.DOFloat(0, ShaderID_2, fadeTime);
+            }
         }
 
         public void ToggleOscillatingEffect()
