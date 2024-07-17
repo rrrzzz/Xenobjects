@@ -4,11 +4,11 @@ namespace Code
 {
     public class MovementInteractionTestProvider : MovementInteractionProviderBase
     {
-        public float zRotationInputSpeed = 1;
+        public float camRotationInputSpeed = 40;
 
-        protected override void Start()
+        protected override void Awake()
         {
-            base.Start();
+            base.Awake();
             SetArObject2Transform(arObjectTr);
         }
 
@@ -17,12 +17,12 @@ namespace Code
             var camRot = _camTr.rotation.eulerAngles;
             if (Input.GetKey(KeyCode.Q))
             {
-                camRot.z += zRotationInputSpeed * Time.deltaTime;
+                camRot.z += camRotationInputSpeed * Time.deltaTime;
             }
 
             if (Input.GetKey(KeyCode.E))
             {
-                camRot.z -= zRotationInputSpeed * Time.deltaTime;
+                camRot.z -= camRotationInputSpeed * Time.deltaTime;
             }
 
             var rotNormalized = NormalizeAngle(camRot.z);
@@ -32,11 +32,34 @@ namespace Code
                 _camTr.rotation = Quaternion.Euler(camRot);
             }
 
-            Tilt01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+            TiltZ01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+            
+            if (Input.GetKey(KeyCode.Z))
+            {
+                camRot.x += camRotationInputSpeed * Time.deltaTime;
+            }
+
+            if (Input.GetKey(KeyCode.C))
+            {
+                camRot.x -= camRotationInputSpeed * Time.deltaTime;
+            }
+            
+            rotNormalized = NormalizeAngle(camRot.x);
+            rotNormalized = Mathf.Abs(rotNormalized);
+            if (rotNormalized < maxTilt)
+            {
+                _camTr.rotation = Quaternion.Euler(camRot);
+            }
+            
+            TiltX01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
         }
         
         protected override void UpdateTouchStatus()
         {
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                SingleTouchEvent.Invoke();
+            }
             if (Input.GetKeyDown(KeyCode.T))
             {
                 DoubleTouchEvent.Invoke();

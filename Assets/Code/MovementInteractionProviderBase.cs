@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -22,11 +23,13 @@ namespace Code
         [SerializeField] protected TMP_Text movedTxt;
         
         public float DistanceToArObject01 { get; set; }
-        public float Tilt01 { get; set; }
+        public float TiltZ01 { get; set; }
+        public float TiltX01 { get; set; }
         public bool IsMoving { get; set; }
         public float MovementDuration { get; set; }
         public float IdleDuration { get; set; }
         public UnityEvent DoubleTouchEvent { get; } = new UnityEvent();
+        public UnityEvent SingleTouchEvent { get; } = new UnityEvent();
         public UnityEvent ShakeEvent { get; } = new UnityEvent();
         public UnityEvent ArObjectSetEvent { get; } = new UnityEvent();
         
@@ -35,7 +38,7 @@ namespace Code
         protected Vector3 _camPrevPosition;
         protected float _prevTime;
         
-        protected virtual void Start()
+        protected virtual void Awake()
         {
             _camTr = Camera.main.transform;
             _camPrevPosition = _camTr.position;
@@ -49,11 +52,16 @@ namespace Code
             UpdateTouchStatus();
             UpdateShakeStatus();
         }
-        
+
+        public bool GetForwardRayHit(out RaycastHit hit)
+        {
+            return Physics.Raycast(_camTr.position, _camTr.forward, out hit);
+        }
+
         public void SetArObject2Transform(Transform arObjectTransform)
         {
             arObjectTr = arObjectTransform;
-            arObjectTr.GetComponentInChildren<ArObject2Manager>().dataProvider = this;
+            arObjectTr.GetComponentInChildren<ArObject2Manager>().Initialize(this);
         }
 
         private void UpdateMovementStatus()

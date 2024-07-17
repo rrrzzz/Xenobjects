@@ -10,9 +10,9 @@ namespace Code
         
         private Vector3 _lowPassValue;
         
-        protected override void Start()
+        protected override void Awake()
         {
-            base.Start();
+            base.Awake();
             _lowPassValue = Input.acceleration;
         }
         
@@ -23,12 +23,22 @@ namespace Code
             
             var rotNormalized = NormalizeAngle(camRot.z) * -1;
             rotNormalized = Mathf.Abs(rotNormalized);
-            Tilt01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
-            titlTxt.text = Mathf.Abs(rotNormalized) + "Tilt 01: " + Tilt01;
+            TiltZ01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+            
+            rotNormalized = NormalizeAngle(camRot.x) * -1;
+            rotNormalized = Mathf.Abs(rotNormalized);
+            TiltX01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+            // titlTxt.text = Mathf.Abs(rotNormalized) + "Tilt 01: " + Tilt01;
         }
         
         protected override void UpdateTouchStatus()
         {
+            if (Input.touchCount == 1)
+            {
+                SingleTouchEvent.Invoke();
+                titlTxt.text = "Single Touch at: " + Time.time;
+                return;
+            }
             if (Input.touchCount != 2) return;
             
             var touch1 = Input.GetTouch(0);
@@ -40,7 +50,7 @@ namespace Code
 
             if (!(timeDifference < TouchTimeThreshold)) return;
             
-            titlTxt.text += " Touch at: " + Time.time;
+            titlTxt.text = "Double Touch at: " + Time.time;
             
             DoubleTouchEvent.Invoke();
         }

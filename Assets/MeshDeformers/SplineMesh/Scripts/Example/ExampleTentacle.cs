@@ -62,7 +62,7 @@ namespace SplineMesh {
             }
         }
         
-        private void ReapplyScaleAndRoll(object sender = null, ListChangedEventArgs<SplineNode> args= null) 
+        public void ReapplyScaleAndRoll(object sender = null, ListChangedEventArgs<SplineNode> args= null) 
         {
             if (_spline == null)
             {

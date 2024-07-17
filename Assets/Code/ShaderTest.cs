@@ -25,6 +25,8 @@ public class ShaderTest : MonoBehaviour
         {
             return;
         }
+
+        transform.position += Vector3.up * Time.fixedDeltaTime;
         SetHdrColor();
         SetFloat();
     }

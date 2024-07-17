@@ -98,6 +98,7 @@ namespace Editor
             AssetDatabase.Refresh();
             if (_wasRefreshCalled)
             {
+                Debug.Log("Code Compiled!");
                 return;
             }
 

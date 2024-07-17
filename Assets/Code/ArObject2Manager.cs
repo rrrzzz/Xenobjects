@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using Code.Effects;
 using DG.Tweening;
 using EasyButtons;
@@ -10,18 +9,19 @@ namespace Code
 {
     public class ArObject2Manager : MonoBehaviour
     {
+        public Transform playerTr;
+        public float delayBeforeInitShrinking = 1;
+        public float delayBeforeMidGrowing = 1;
+        public float playerToPathNodeDistanceThreshold = 0.3f;
         public float orbDecolorationTime = 1;
-        // public float orbScaleDelay = 0.2f;
         public float orbScaleTime = 1.5f;
-        public float firstTentacleScaleToFullTime = 2;
-        public float firstTentacleScaleDelayTime = .1f; 
         public float idleDurationThreshold = 3;
         public float oscillationSpeed = 1;
-        public MovementInteractionProviderBase dataProvider;
-
-        public SplineMeshTiling firstTentacleSpline;
-        public SplineMeshTiling secondTentacleSpline;
-        public SplineMeshTiling thirdTentacleSpline;
+        public float splineScalingPause = 1;
+        
+        public SplineMeshTiling initialTentacleSpline;
+        public SplineMeshTiling highResMiddleTentacleSpline;
+        public SplineMeshTiling endTentacleSpline;
         
         public GameObject steamObj;
         public Transform orbObj;
@@ -31,7 +31,6 @@ namespace Code
         public Vector3 orbStartPos;
         public Vector3 orbEndPos = new Vector3(-5.606459f, 0.6333609f, -0.2901777f);
         
-        private SplineMeshTiling _firstSpline;
         private ExampleTentacle _exampleTentacle;
         
         private OrbGlowingEffect _orbGlow = new OrbGlowingEffect();
@@ -42,59 +41,37 @@ namespace Code
         private bool _isTouchToggleOn;
         private float _idleT;
         private float _movingT;
-        private bool _isArObjDisabled;
+        private bool _isArObjDisabled = false;
+        private bool _isInitialized;
         private Vector3 _orbScale;
+        private MovementInteractionProviderBase _dataProvider;
+        private bool _isMidPulsing;
+        private bool _isFinishedPulsing;
+        private bool _isPathEndReached;
 
-        private void Start()
+        public void Initialize(MovementInteractionProviderBase dataProvider)
         {
+            _dataProvider = dataProvider;
+            
             SetMaterials();
+            
             orbStartPos = orbObj.position;
             _orbScale = orbObj.localScale;
-
-            // orbEndPos = orbObj.position;
-            // dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
-            // dataProvider.ArObjectSetEvent.AddListener(SetTentacleComponents);
-            // dataProvider.ShakeEvent.AddListener(ResetScaleAndTime);
-        }
-        
-        [Button]
-        private void ShrinkOrb()
-        {
-            orbObj.DOScale(Vector3.zero, orbScaleTime);
-            orbObj.DOMove(orbEndPos, orbScaleTime);
-        }
-        
-        [Button]
-        private void GrowOrb()
-        {
-            orbObj.DOScale(_orbScale, orbScaleTime);
-            orbObj.DOMove(orbStartPos, orbScaleTime);
-        }
-
-        [Button]
-        private void SetOrbEndPos()
-        { 
-            orbEndPos = orbObj.position;
-            print(orbEndPos);
-        }
-        
-        [Button]
-        private void ResetOrb()
-        {
-            orbObj.position = orbStartPos;
-            orbObj.localScale = _orbScale;
-        }
-        
-        [Button]
-        private void SaveOrbInitPosition()
-        {
-            _orbScale = orbObj.localScale;
-            orbStartPos = orbObj.position;
-            print(orbStartPos);
+            
+            _dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
+            _dataProvider.ShakeEvent.AddListener(ResetScale);
+            
+            highResMiddleTentacleSpline.PathEndReachedEvent.AddListener(OnPathEndReached);
+            
+            _isInitialized = true;
         }
         
         private void Update()
         {
+            if (!_isInitialized)
+            {
+                return;
+            }
             // if (dataProvider.IdleDuration > idleDurationThreshold && !_isArObjDisabled)
             // {
             //     _isArObjDisabled = true;
@@ -115,16 +92,106 @@ namespace Code
 
             // SetMovementChangingDissolution();
         }
+        
+        [Button]
+        private void PlayPathfindingSequence()
+        {
+            StartCoroutine(PathfindingCoroutine());
+        }
 
-        private void ResetScaleAndTime()
+        private IEnumerator PathfindingCoroutine()
+        {
+            orbObj.position = orbStartPos;
+            orbObj.localScale = _orbScale;
+            _orbGlow.FadeColor(0, false);
+            _orbGlow.FadeColor(orbDecolorationTime, true);
+            FadeOutEffects();
+
+            yield return new WaitForSeconds(orbDecolorationTime);
+            
+            initialTentacleSpline.ScaleToFull();
+            ShrinkOrb();
+
+            yield return new WaitForSeconds(initialTentacleSpline.GetTotalScaleToFullDuration() + delayBeforeInitShrinking);
+            initialTentacleSpline.ScaleToZero();
+            yield return new WaitForSeconds(delayBeforeMidGrowing);
+            TogglePulseMidTentacle();
+
+            var firstNodePos = highResMiddleTentacleSpline.GetGlobalNodePos(0);
+
+            while (Vector3.Distance(playerTr.position, firstNodePos) > playerToPathNodeDistanceThreshold * 1.5f)
+            {
+                yield return null;
+            }
+            
+            TogglePulseMidTentacle();
+
+            while (!_isFinishedPulsing)
+            {
+                yield return null;
+            }
+
+            highResMiddleTentacleSpline.InitVanishing(playerTr, playerToPathNodeDistanceThreshold);
+
+            while (!_isPathEndReached)
+            {
+                yield return null;
+            }
+            
+            highResMiddleTentacleSpline.ScaleToZeroNow();
+            print("Start creating puzzle!");
+        }
+
+        [Button]
+        private void TogglePulseMidTentacle()
+        {
+            _isMidPulsing = !_isMidPulsing;
+            if (!_isMidPulsing)
+            {
+                return;
+            }
+
+            StartCoroutine(PulseCoroutine());
+        }
+
+        private IEnumerator PulseCoroutine()
+        {
+            var splineToPulse = highResMiddleTentacleSpline;
+            var isGrowing = true;
+
+            var pauseAfterGrowing = new WaitForSeconds(splineToPulse.GetTotalScaleToFullDuration() + splineScalingPause);
+            var pauseAfterShrinking = new WaitForSeconds(splineToPulse.GetTotalScaleToZeroDuration());
+            
+            while (true)
+            {
+                if (isGrowing)
+                {
+                    splineToPulse.ScaleToFull();
+                }
+                else
+                {
+                    if (!_isMidPulsing)
+                    {
+                        _isFinishedPulsing = true;
+                        break;
+                    }
+                    splineToPulse.ScaleToZero();
+                }
+                
+                yield return isGrowing ? pauseAfterGrowing : pauseAfterShrinking;
+                
+                isGrowing = !isGrowing;
+            }
+        }
+
+        private void ResetScale()
         {
             if (_isArObjDisabled)
             {
                 return;
             }
-            _firstSpline.ResetScalingAndPositions();
-            // _exampleTentacle.startScale += 0.001f;
-            // _exampleTentacle.ReapplyScaleAndRoll();
+            
+            highResMiddleTentacleSpline.ScaleToZeroNow();
         }
         
         private void FadeOutEffects()
@@ -136,30 +203,10 @@ namespace Code
         
         private void FadeInEffects()
         {
-            _risingSteamEffect.FadeAlpha(firstTentacleScaleToFullTime, false);
-            _inkLinesEffect.FadeAlpha(firstTentacleScaleToFullTime, false);
+            _risingSteamEffect.FadeAlpha(initialTentacleSpline.scaleToFullDuration, false);
+            _inkLinesEffect.FadeAlpha(initialTentacleSpline.scaleToFullDuration, false);
         }
         
-        [Button]
-        private void PlayFirstStage()
-        {
-            StartCoroutine(FirstStageCoroutine());
-        }
-
-        private IEnumerator FirstStageCoroutine()
-        {
-            orbObj.position = orbStartPos;
-            orbObj.localScale = _orbScale;
-            _orbGlow.FadeColor(0, false);
-            _orbGlow.FadeColor(orbDecolorationTime, true);
-            FadeOutEffects();
-
-            yield return new WaitForSeconds(orbDecolorationTime);
-            
-            firstTentacleSpline.ScaleToFull(firstTentacleScaleToFullTime, firstTentacleScaleDelayTime);
-            ShrinkOrb();
-        }
-
         private void SetMaterials()
         {
             _risingSteamEffect.SetMaterial(steamObj);
@@ -199,21 +246,70 @@ namespace Code
             // }
         }
 
+        private void OnPathEndReached()
+        {
+            _isPathEndReached = true;
+        }
+        
         private void OnDoubleTouch()
         {
             if (_isArObjDisabled)
             {
                 return;
             }
-            
-            _isTouchToggleOn = !_isTouchToggleOn;
-            _distortion.ToggleOscillatingEffect();
+           
+            TogglePulseMidTentacle();
+            // _isTouchToggleOn = !_isTouchToggleOn;
+            // _distortion.ToggleOscillatingEffect();
+        }
+        
+        // [Button]
+        private void ShrinkOrb()
+        {
+            orbObj.DOScale(Vector3.zero, orbScaleTime);
+            orbObj.DOMove(orbEndPos, orbScaleTime);
+        }
+        
+        // [Button]
+        private void GrowOrb()
+        {
+            orbObj.DOScale(_orbScale, orbScaleTime);
+            orbObj.DOMove(orbStartPos, orbScaleTime);
+        }
+
+        // [Button]
+        private void SetOrbEndPos()
+        { 
+            orbEndPos = orbObj.position;
+            print(orbEndPos);
+        }
+        
+        // [Button]
+        private void ResetOrb()
+        {
+            orbObj.position = orbStartPos;
+            orbObj.localScale = _orbScale;
+        }
+        
+        // [Button]
+        private void SaveOrbInitPosition()
+        {
+            _orbScale = orbObj.localScale;
+            orbStartPos = orbObj.position;
+            print(orbStartPos);
         }
 
         private void OnDestroy()
         {
-            dataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
-            dataProvider.ArObjectSetEvent.RemoveListener(SetMaterials);
+            if (highResMiddleTentacleSpline)
+            {
+                highResMiddleTentacleSpline.PathEndReachedEvent.RemoveListener(OnPathEndReached);
+            }
+            
+            if (_dataProvider)
+            {
+                _dataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
+            }
         }
     }
 }
