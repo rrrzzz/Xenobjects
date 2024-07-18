@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace Editor
@@ -11,7 +13,6 @@ namespace Editor
         private static FileSystemWatcher _watcher2;
         private static FileSystemWatcher _watcher3;
         private static bool _needsRefresh;
-        private static bool _wasRefreshCalled;
         private static bool _isInited;
         private static bool _isInPlayMode;
         
@@ -28,8 +29,15 @@ namespace Editor
             _watcher2 = CreateWatcher("*.shader");
             _watcher3 = CreateWatcher("*.asmdef");
             
+            CompilationPipeline.compilationFinished += OnCompilationFinished;
+            
             EditorApplication.LockReloadAssemblies();
             _isInited = true;
+        }
+
+        private static void OnCompilationFinished(object obj)
+        {
+            Debug.Log("Сompiled at " + DateTime.Now.ToString("HH:mm:ss"));
         }
 
         private static FileSystemWatcher CreateWatcher(string extensionToWatch)
@@ -94,16 +102,14 @@ namespace Editor
             {
                 return;
             }
-            EditorApplication.UnlockReloadAssemblies();
-            AssetDatabase.Refresh();
-            if (_wasRefreshCalled)
-            {
-                Debug.Log("Code Compiled!");
-                return;
-            }
 
-            _wasRefreshCalled = true;
-            Refresh();
+            EditorApplication.UnlockReloadAssemblies();
+            
+            EditorApplication.delayCall += () =>
+            {
+                EditorApplication.UnlockReloadAssemblies();
+                AssetDatabase.Refresh();
+            };
         }
         
         [InitializeOnLoadMethod]
