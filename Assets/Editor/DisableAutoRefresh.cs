@@ -117,7 +117,6 @@ namespace Editor
         {
             EditorApplication.LockReloadAssemblies();
             _needsRefresh = false;
-            _wasRefreshCalled = false;
         }
         
         [MenuItem("STOPCompile/Refresh and Play %r")]
