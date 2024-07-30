@@ -128,7 +128,7 @@ namespace SplineMesh {
         /// Bend the mesh. This method may take time and should not be called more than necessary.
         /// Consider using <see cref="ComputeIfNeeded"/> for faster result.
         /// </summary>
-        private  void Compute() {
+        private void Compute() {
             isDirty = false;
             switch (Mode) {
                 case FillingMode.Once:

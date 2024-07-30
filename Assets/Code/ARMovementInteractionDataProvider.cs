@@ -19,16 +19,19 @@ namespace Code
         protected override void UpdatePhoneTiltAngle()
         {
             var camRot = _camTr.rotation.eulerAngles;
-            cameraPosRotTxt.text = $"Phone pos: {_camTr.position}\nPhone rot: {camRot}\n";
-            
-            var rotNormalized = NormalizeAngle(camRot.z) * -1;
-            rotNormalized = Mathf.Abs(rotNormalized);
-            TiltZ01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
-            
-            rotNormalized = NormalizeAngle(camRot.x) * -1;
-            rotNormalized = Mathf.Abs(rotNormalized);
-            TiltX01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+           
             // titlTxt.text = Mathf.Abs(rotNormalized) + "Tilt 01: " + Tilt01;
+            
+            var rotNormalized = NormalizeRotationAngles(camRot);
+            var correctedRotY = rotNormalized.y - _puzzleEnteredYRotation;
+            
+            cameraPosRotTxt.text = $"Phone pos: {_camTr.position}\nPhone rot: {rotNormalized}\n";
+            
+            SignedTiltY01 = Mathf.Clamp(correctedRotY, -maxTiltY, maxTiltY) / maxTiltY;
+            SignedTiltZ01 = Mathf.Clamp(rotNormalized.z, -maxTilt, maxTilt) / maxTilt;
+            
+            // cameraPosRotTxt.text = $"Phone pos: {_camTr.position}\nSignedZ: {SignedTiltZ01} SignedTiltY01: {SignedTiltY01}\n";
+            TiltZ01 = Mathf.Abs(SignedTiltZ01);
         }
         
         protected override void UpdateTouchStatus()

@@ -1,4 +1,5 @@
 ﻿using System;
+using EasyButtons;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -27,11 +28,15 @@ namespace SplineMesh {
 
         private Spline _spline;
 
+
         private void OnEnable()
         {
-            ReapplyScaleAndRoll();
-            _spline = GetComponent<Spline>();
+            if (_spline == null)
+                _spline = GetComponent<Spline>();
+            
             _spline.NodeListChanged += ReapplyScaleAndRoll;
+            
+            ReapplyScaleAndRoll();
         }
 
         private void OnValidate()
@@ -39,6 +44,20 @@ namespace SplineMesh {
             ReapplyScaleAndRoll();
         }
 
+        [Button]
+        private void RefreshSpline()
+        {
+            if (startRoll > 0)
+            {
+                startRoll -= 0.01f;
+            }
+            else
+            {
+                startRoll += 0.01f;
+            }
+            ReapplyScaleAndRoll();
+        }
+        
         private void Update()
         {
             if (isSplitting)

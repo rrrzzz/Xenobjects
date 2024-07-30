@@ -15,6 +15,7 @@ namespace Editor
         private static bool _needsRefresh;
         private static bool _isInited;
         private static bool _isInPlayMode;
+        private static bool _isWantPlayMode;
         
         static DisableAutoRefresh()
         {
@@ -127,7 +128,24 @@ namespace Editor
                 EditorApplication.ExitPlaymode();
                 return;
             }
+
+            _isWantPlayMode = true;
+
+            if (!_needsRefresh)
+            {
+                EditorApplication.EnterPlaymode();
+                return;
+            }
+            
+            CompilationPipeline.compilationFinished += OnCompilationFinishedPlaymode;
+
+            Refresh();
+        }
+        
+        private static void OnCompilationFinishedPlaymode(object obj)
+        {
             EditorApplication.EnterPlaymode();
+            CompilationPipeline.compilationFinished -= OnCompilationFinishedPlaymode;
         }
     }
 }

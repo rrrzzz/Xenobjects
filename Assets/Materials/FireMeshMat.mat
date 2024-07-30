@@ -64,6 +64,7 @@ Material:
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
+    - _DisplacementAmount: 0.07
     - _DstBlend: 0
     - _Glossiness: 0.5
     - _GradientStrength: 1
@@ -79,6 +80,6 @@ Material:
     - _BorderScale: {r: 0, g: 0, b: 0, a: 3}
     - _Color: {r: 3, g: 1.5517249, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _TimeScale: {r: 0.15, g: 1, b: 0.2, a: -3}
-    - _TintColor: {r: 0.5676508, g: 0.4232598, b: 0.17939909, a: 1}
+    - _TimeScale: {r: 0, g: 0, b: 0, a: 0}
+    - _TintColor: {r: 1.39772, g: 1.0418267, b: 0.44173485, a: 1}
   m_BuildTextureStacks: []

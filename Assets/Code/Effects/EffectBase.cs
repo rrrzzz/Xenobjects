@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Analytics;
 
 namespace Code.Effects
 {
@@ -19,7 +17,8 @@ namespace Code.Effects
         protected float MinFloat;
         protected float MaxFloat;
         protected bool IsUsingFloat;
-        
+        protected Material Material => Materials[0];
+
         public void SetMaterial(GameObject go)
         {
             if (string.IsNullOrEmpty(MaterialName))

@@ -24,34 +24,29 @@ namespace Code
             {
                 camRot.z -= camRotationInputSpeed * Time.deltaTime;
             }
-
-            var rotNormalized = NormalizeAngle(camRot.z);
-            rotNormalized = Mathf.Abs(rotNormalized);
-            if (rotNormalized < maxTilt)
-            {
-                _camTr.rotation = Quaternion.Euler(camRot);
-            }
-
-            TiltZ01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
             
             if (Input.GetKey(KeyCode.Z))
             {
-                camRot.x += camRotationInputSpeed * Time.deltaTime;
+                camRot.y += camRotationInputSpeed * Time.deltaTime;
             }
 
             if (Input.GetKey(KeyCode.C))
             {
-                camRot.x -= camRotationInputSpeed * Time.deltaTime;
+                camRot.y -= camRotationInputSpeed * Time.deltaTime;
             }
-            
-            rotNormalized = NormalizeAngle(camRot.x);
-            rotNormalized = Mathf.Abs(rotNormalized);
-            if (rotNormalized < maxTilt)
+
+            var rotNormalized = NormalizeRotationAngles(camRot);
+            var correctedRotY = rotNormalized.y - _puzzleEnteredYRotation;
+            var rotYAbs = Mathf.Abs(correctedRotY);
+            var rotZAbs = Mathf.Abs(rotNormalized.z);
+            if (rotYAbs < maxTiltY || rotZAbs < maxTilt)
             {
                 _camTr.rotation = Quaternion.Euler(camRot);
             }
-            
-            TiltX01 = Mathf.InverseLerp(0, maxTilt, rotNormalized); 
+
+            SignedTiltY01 = Mathf.Clamp(correctedRotY, -maxTiltY, maxTiltY) / maxTiltY;
+            TiltZ01 = Mathf.InverseLerp(0, maxTilt, rotZAbs);
+            SignedTiltZ01 = rotNormalized.z < 0 ? TiltZ01 * -1 : TiltZ01;
         }
         
         protected override void UpdateTouchStatus()
@@ -68,12 +63,10 @@ namespace Code
         
         protected override void UpdateShakeStatus()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                ShakeEvent.Invoke();
-            }
+            // if (Input.GetKeyDown(KeyCode.Space))
+            // {
+            //     ShakeEvent.Invoke();
+            // }
         }
-        
-        
     }
 }
