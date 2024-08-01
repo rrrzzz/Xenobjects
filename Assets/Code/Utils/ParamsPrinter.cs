@@ -6,11 +6,13 @@ using UnityEngine;
 [ExecuteAlways]
 public class ParamsPrinter : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    
+    [Button]
+    public void PrintLocalPos()
     {
-        
+        print(FormatVector3(transform.localPosition));
     }
+    
     [Button]
     public void PrintColor()
     {
@@ -18,7 +20,18 @@ public class ParamsPrinter : MonoBehaviour
         print(FormatColor(mat.GetColor("_TintColor")));
     }
     
-    string FormatColor(Color color)
+    private string FormatVector3(Vector3 vec3)
+    {
+        // Format each component to the desired format with 'f' suffix and specified precision
+        string x = vec3.x.ToString("0.000") + "f";
+        string y = vec3.y.ToString("0.000") + "f";
+        string z = vec3.z.ToString("0.000") + "f";
+
+        // Combine the formatted components into the final string
+        return $"({x}, {y}, {z})";
+    }
+    
+    private string FormatColor(Color color)
     {
         // Format each component to the desired format with 'f' suffix and specified precision
         string r = color.r.ToString("0.00000") + "f";

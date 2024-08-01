@@ -14,7 +14,7 @@ namespace Code
 
         protected override void UpdatePhoneTiltAngle()
         {
-            var camRot = _camTr.rotation.eulerAngles;
+            var camRot = camTr.rotation.eulerAngles;
             if (Input.GetKey(KeyCode.Q))
             {
                 camRot.z += camRotationInputSpeed * Time.deltaTime;
@@ -41,7 +41,7 @@ namespace Code
             var rotZAbs = Mathf.Abs(rotNormalized.z);
             if (rotYAbs < maxTiltY || rotZAbs < maxTilt)
             {
-                _camTr.rotation = Quaternion.Euler(camRot);
+                camTr.rotation = Quaternion.Euler(camRot);
             }
 
             SignedTiltY01 = Mathf.Clamp(correctedRotY, -maxTiltY, maxTiltY) / maxTiltY;
@@ -63,10 +63,10 @@ namespace Code
         
         protected override void UpdateShakeStatus()
         {
-            // if (Input.GetKeyDown(KeyCode.Space))
-            // {
-            //     ShakeEvent.Invoke();
-            // }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                ShakeEvent.Invoke();
+            }
         }
     }
 }

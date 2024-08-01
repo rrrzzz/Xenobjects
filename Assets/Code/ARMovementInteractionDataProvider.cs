@@ -18,14 +18,15 @@ namespace Code
         
         protected override void UpdatePhoneTiltAngle()
         {
-            var camRot = _camTr.rotation.eulerAngles;
-           
-            // titlTxt.text = Mathf.Abs(rotNormalized) + "Tilt 01: " + Tilt01;
+            var camRot = camTr.rotation.eulerAngles;
             
             var rotNormalized = NormalizeRotationAngles(camRot);
             var correctedRotY = rotNormalized.y - _puzzleEnteredYRotation;
-            
-            cameraPosRotTxt.text = $"Phone pos: {_camTr.position}\nPhone rot: {rotNormalized}\n";
+
+            if (isDebugInfoShown)
+            {
+                cameraPosRotTxt.text = $"Phone pos: {camTr.position}\nPhone rot: {rotNormalized}\n";
+            }
             
             SignedTiltY01 = Mathf.Clamp(correctedRotY, -maxTiltY, maxTiltY) / maxTiltY;
             SignedTiltZ01 = Mathf.Clamp(rotNormalized.z, -maxTilt, maxTilt) / maxTilt;
@@ -39,7 +40,10 @@ namespace Code
             if (Input.touchCount == 1)
             {
                 SingleTouchEvent.Invoke();
-                titlTxt.text = "Single Touch at: " + Time.time;
+                if (isDebugInfoShown)
+                {
+                    titlTxt.text = "Single Touch at: " + Time.time;
+                }
                 return;
             }
             if (Input.touchCount != 2) return;
@@ -52,8 +56,11 @@ namespace Code
             var timeDifference = Mathf.Abs(touch1.deltaTime - touch2.deltaTime);
 
             if (!(timeDifference < TouchTimeThreshold)) return;
-            
-            titlTxt.text = "Double Touch at: " + Time.time;
+
+            if (isDebugInfoShown)
+            {
+                titlTxt.text = "Double Touch at: " + Time.time;
+            }
             
             DoubleTouchEvent.Invoke();
         }
@@ -67,10 +74,15 @@ namespace Code
             if (deltaAcceleration.sqrMagnitude >= ShakeDetectionThreshold)
             {
                 ShakeEvent.Invoke();
-                shakeText.text = "Shake event detected at time " + Time.time;
+                if (isDebugInfoShown)
+                {
+                    shakeText.text = "Shake event detected at time " + Time.time;
+                }
             }
         }
+
         
+
         // private void UpdateTouchStatusDebug()
         // {
         //     if (Input.touchCount == 2)

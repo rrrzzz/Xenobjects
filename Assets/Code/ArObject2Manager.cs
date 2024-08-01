@@ -4,15 +4,16 @@ using DG.Tweening;
 using EasyButtons;
 using SplineMesh;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Code
 {
     public class ArObject2Manager : MonoBehaviour
     {
+        public ParticleSystem swarmParticles;
         public float puzzleXOffset;
         public float puzzleYOffset;
         public float puzzleAppearingTime = 1f;
-        public Transform playerTr;
         public float delayBeforeInitShrinking = 1;
         public float delayBeforeMidGrowing = 1;
         public float playerToPathNodeDistanceThreshold = 0.3f;
@@ -32,8 +33,8 @@ namespace Code
         public GameObject inkLinesObj;
         public GameObject capsuleObj;
         
-        public Vector3 orbStartPos;
-        public Vector3 orbEndPos = new Vector3(-5.606459f, 0.6333609f, -0.2901777f);
+        private readonly Vector3 _orbEndPos = new Vector3(15.581f, 5.037f, 7.488f);
+        private readonly Vector3 _orbStartPos = new Vector3(13.357f, 3.300f, 5.976f);
         
         private ExampleTentacle _exampleTentacle;
         
@@ -60,7 +61,7 @@ namespace Code
         private bool _isFirstHit;
         private static int _puzzleTintId = Shader.PropertyToID("_TintColor");
         private Material[] _puzzleSegmentMaterials;
-        private bool isMateralsSet;
+        private bool _isMaterialsSet;
         
         private readonly Color _puzzleSolvedColor = new Color(2.27060f, 1.69304f, 0.71760f, 1.00000f);
         private readonly Color _originalColor = new Color(2.31267f, 1.72440f, 0.73089f, 1.00000f);
@@ -68,22 +69,21 @@ namespace Code
 
         public void Initialize(MovementInteractionProviderBase dataProvider)
         {
+            _isInitialized = true;
+            
             _dataProvider = dataProvider;
             
             SetMaterials();
             
-            orbStartPos = orbObj.position;
             _orbScale = orbObj.localScale;
             
-            // _dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
-            _dataProvider.SingleTouchEvent.AddListener(OnDoubleTouch);
-            _dataProvider.ShakeEvent.AddListener(ResetScale);
+            _dataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
+            _dataProvider.ShakeEvent.AddListener(PlaySwarm);
             
             highResMiddleTentacleSpline.PathEndReachedEvent.AddListener(OnPathEndReached);
             
-            _isInitialized = true;
-
-            // StartPuzzleTest();
+            initialTentacleSpline.ScaleToZeroNow();
+            highResMiddleTentacleSpline.ScaleToZeroNow();
         }
         
         private void Update()
@@ -92,43 +92,24 @@ namespace Code
             {
                 return;
             }
-            //
-            // if (Input.GetKey(KeyCode.N))
-            // {
-            //     var currentRot = puzzleTentacleSpline.Rotation;
-            //     currentRot.y += rotationSpeed * Time.deltaTime;
-            //     puzzleTentacleSpline.rotation = currentRot;
-            //     puzzleTentacleSpline.SetRotation();
-            //     Debug.Log(currentRot.y);
-            // }
-            //
-            // if (Input.GetKey(KeyCode.M))
-            // {
-            //     var currentRot = puzzleTentacleSpline.Rotation;
-            //     currentRot.y -= rotationSpeed * Time.deltaTime;
-            //     puzzleTentacleSpline.rotation = currentRot;
-            //     puzzleTentacleSpline.SetRotation();
-            //     Debug.Log(currentRot.y);
-            // }
-            // if (dataProvider.IdleDuration > idleDurationThreshold && !_isArObjDisabled)
-            // {
-            //     _isArObjDisabled = true;
-            //     FadeEffects();
-            // }
-            //
-            // if (_isArObjDisabled)
-            // {
-            //     return;
-            // }
-            // _orbGlow.SetEffectByNormalizedValue(dataProvider.DistanceToArObject01);   
-            // _distortion.SetEffectByNormalizedValue(dataProvider.Tilt01);
-            //
-            // if (_isTouchToggleOn)
-            // {
-            //     _distortion.SetOscillatingEffect(oscillationSpeed);
-            // }
 
-            // SetMovementChangingDissolution();
+            if (!_wasObjectActivated && _dataProvider.IdleDuration > idleDurationThreshold && !_isArObjDisabled)
+            {
+                _isArObjDisabled = true;
+                StartCoroutine(PathfindingCoroutine());
+            }
+            
+            if (_isArObjDisabled)
+            {
+                return;
+            }
+            _orbGlow.SetEffectByNormalizedValue(_dataProvider.DistanceToArObject01);   
+            _distortion.SetEffectByNormalizedValue(_dataProvider.TiltZ01);
+            
+            if (_isTouchToggleOn)
+            {
+                _distortion.SetOscillatingEffect(oscillationSpeed);
+            }
         }
         
         [Button]
@@ -139,7 +120,7 @@ namespace Code
 
         private IEnumerator PathfindingCoroutine()
         {
-            orbObj.position = orbStartPos;
+            orbObj.localPosition = _orbStartPos;
             orbObj.localScale = _orbScale;
             _orbGlow.FadeColor(0, false);
             _orbGlow.FadeColor(orbDecolorationTime, true);
@@ -157,7 +138,7 @@ namespace Code
 
             var firstNodePos = highResMiddleTentacleSpline.GetGlobalNodePos(0);
 
-            while (Vector3.Distance(playerTr.position, firstNodePos) > playerToPathNodeDistanceThreshold * 1.5f)
+            while (Vector3.Distance(_dataProvider.camTr.position, firstNodePos) > playerToPathNodeDistanceThreshold * 1.5f)
             {
                 yield return null;
             }
@@ -169,7 +150,7 @@ namespace Code
                 yield return null;
             }
 
-            highResMiddleTentacleSpline.InitVanishing(playerTr, playerToPathNodeDistanceThreshold);
+            highResMiddleTentacleSpline.InitVanishing(_dataProvider.camTr, playerToPathNodeDistanceThreshold);
 
             while (!_isPathEndReached)
             {
@@ -178,15 +159,9 @@ namespace Code
             
             highResMiddleTentacleSpline.ScaleToZeroNow();
             
-            _puzzleGlow.IncreaseAlphaToOne(puzzleAppearingTime);
-            yield return new WaitForSeconds(puzzleAppearingTime);
-
-
+            StopPuzzleCoroutine();
             
-            print("Morph into glowing orb");
-            
-            FadeInEffects();
-            yield return new WaitForSeconds(orbDecolorationTime);
+            yield return StartCoroutine(BeginPuzzleLoop());
             
             _isArObjDisabled = false;
             _wasObjectActivated = true;
@@ -203,22 +178,17 @@ namespace Code
         {
             _isFirstHit = true;
             _isPuzzleCompleted = false;
-            puzzleTentacleSpline.SetSegmentsRotationToZero();
-            _puzzleGlow.SetAlphaZero();
-            
-            _puzzleGlow.IncreaseAlphaToOne(puzzleAppearingTime);
-            yield return new WaitForSeconds(puzzleAppearingTime);
-
             SetRandomPuzzleRotation();
-            
             var errorX = Mathf.Abs(_startPuzzleXRotation);
             var errorY = Mathf.Abs(_startPuzzleYRotation);
             var totalError = Mathf.Clamp01((errorX + errorY) / 360);
                     
             var tColor = 1 - totalError;
-            InterpolatePuzzleColor(tColor);
-
-
+            InterpolatePuzzleColor(tColor, true);
+            
+            _puzzleGlow.IncreaseAlphaToOne(puzzleAppearingTime);
+            yield return new WaitForSeconds(puzzleAppearingTime);
+            
             while (!_isPuzzleCompleted)
             {
                 if (Input.GetKeyDown(KeyCode.Space))
@@ -230,16 +200,15 @@ namespace Code
                 {
                     if (_isFirstHit)
                     {
-                        Debug.Log("first hit");
                         _isFirstHit = false;
                         _dataProvider.SetPuzzleEnteredRotation();
                     }
                     
                     var rotationX = _dataProvider.SignedTiltZ01 * 180 + _startPuzzleXRotation;
                     var rotationY = _dataProvider.SignedTiltY01 * 180 + _startPuzzleYRotation;
-
+            
                     puzzleTentacleSpline.RotateSegments(rotationX, rotationY);
-
+            
                     errorX = Mathf.Abs(rotationX);
                     errorY = Mathf.Abs(rotationY);
                     totalError = Mathf.Clamp01((errorX + errorY) / 360);
@@ -268,14 +237,15 @@ namespace Code
                 yield return null;
             }
 
-            puzzleEndTentacleSpline.enabled = true;
             puzzleTentacleSpline.enabled = false;
+            puzzleTentacleSpline.gameObject.SetActive(false);
+            puzzleEndTentacleSpline.gameObject.SetActive(true);
             puzzleEndTentacleSpline.InterpolatePosDir();
             yield return new WaitForSeconds(puzzleEndTentacleSpline.interpolationDuration);
             
             puzzleEndTentacleSpline.InverseVanish();
             var vanishDuration = puzzleEndTentacleSpline.GetTotalVanishingDuration();
-            yield return new WaitForSeconds(vanishDuration / 2);
+            yield return new WaitForSeconds(vanishDuration / 1.4f);
             
             _orbGlow.FadeColor(0, false);
             
@@ -284,16 +254,19 @@ namespace Code
             FadeInEffects();
         }
         
-        private void InterpolatePuzzleColor(float t)
+        private void InterpolatePuzzleColor(float t, bool isAlphaZero = false)
         {
-            if (!isMateralsSet)
+            if (!_isMaterialsSet)
             {
-                isMateralsSet = true;
+                _isMaterialsSet = true;
                 _puzzleSegmentMaterials = puzzleTentacleSpline.GetSegmentMaterials();
             }
             
             var interpolatedColor = Vector4.Lerp(_fadedPuzzleColor, _puzzleSolvedColor, t);
-            
+            if (isAlphaZero)
+            {
+                interpolatedColor.w = 0;
+            }
             foreach (var mat in _puzzleSegmentMaterials)
             {
                 mat.SetColor(_puzzleTintId, interpolatedColor);
@@ -360,14 +333,19 @@ namespace Code
             }
         }
 
-        private void ResetScale()
+        private void PlaySwarm()
         {
             if (_isArObjDisabled)
             {
                 return;
             }
+
+            if (!swarmParticles.gameObject.activeInHierarchy)
+            {
+                swarmParticles.gameObject.SetActive(true);
+            }
             
-            highResMiddleTentacleSpline.ScaleToZeroNow();
+            swarmParticles.Play();
         }
         
         private void FadeOutEffects()
@@ -435,46 +413,22 @@ namespace Code
                 return;
             }
 
-            // StartPuzzleTest();
-            // TogglePulseMidTentacle();
-            // _isTouchToggleOn = !_isTouchToggleOn;
-            // _distortion.ToggleOscillatingEffect();
+            _isTouchToggleOn = !_isTouchToggleOn;
+            _distortion.ToggleOscillatingEffect();
         }
         
         [Button]
         private void ShrinkOrb()
         {
             orbObj.DOScale(Vector3.zero, orbScaleTime);
-            orbObj.DOMove(orbEndPos, orbScaleTime);
+            orbObj.DOLocalMove(_orbEndPos, orbScaleTime);
         }
         
         [Button]
         private void GrowOrb()
         {
             orbObj.DOScale(_orbScale, orbScaleTime);
-            orbObj.DOMove(orbStartPos, orbScaleTime);
-        }
-
-        // [Button]
-        private void SetOrbEndPos()
-        { 
-            orbEndPos = orbObj.position;
-            print(orbEndPos);
-        }
-        
-        // [Button]
-        private void ResetOrb()
-        {
-            orbObj.position = orbStartPos;
-            orbObj.localScale = _orbScale;
-        }
-        
-        // [Button]
-        private void SaveOrbInitPosition()
-        {
-            _orbScale = orbObj.localScale;
-            orbStartPos = orbObj.position;
-            print(orbStartPos);
+            orbObj.DOLocalMove(_orbStartPos, orbScaleTime);
         }
 
         private void OnDestroy()
@@ -487,6 +441,7 @@ namespace Code
             if (_dataProvider)
             {
                 _dataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
+                _dataProvider.ShakeEvent.RemoveListener(PlaySwarm);
             }
         }
     }

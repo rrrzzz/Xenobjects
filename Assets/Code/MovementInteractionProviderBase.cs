@@ -22,7 +22,7 @@ namespace Code
         [SerializeField] protected TMP_Text objPosTxt;
         [SerializeField] protected TMP_Text titlTxt;
         [SerializeField] protected TMP_Text movedTxt;
-        [SerializeField] protected TMP_InputField paramField;
+        // [SerializeField] protected TMP_InputField paramField;
         
         public float DistanceToArObject01 { get; set; }
         public float TiltZ01 { get; set; }
@@ -34,10 +34,10 @@ namespace Code
         public UnityEvent DoubleTouchEvent { get; } = new UnityEvent();
         public UnityEvent SingleTouchEvent { get; } = new UnityEvent();
         public UnityEvent ShakeEvent { get; } = new UnityEvent();
-        public UnityEvent ArObjectSetEvent { get; } = new UnityEvent();
+
+        [HideInInspector] public Transform camTr;
         
         protected float _movementStateStartTime;
-        protected Transform _camTr;
         protected Vector3 _camPrevPosition;
         protected float _prevTime;
         protected float _puzzleEnteredYRotation;
@@ -45,9 +45,10 @@ namespace Code
         
         protected virtual void Awake()
         {
-            _camTr = Camera.main.transform;
-            _camPrevPosition = _camTr.position;
+            camTr = Camera.main.transform;
+            _camPrevPosition = camTr.position;
         }
+        
         
         private void Update()
         { 
@@ -60,28 +61,25 @@ namespace Code
         
         public void SetPuzzleEnteredRotation()
         {
-            _puzzleEnteredYRotation = NormalizeRotationAngles(_camTr.rotation.eulerAngles).y;
+            _puzzleEnteredYRotation = NormalizeRotationAngles(camTr.rotation.eulerAngles).y;
             UpdatePhoneTiltAngle();
-            if (movedTxt)
-            {
-                movedTxt.text = "Entered puzzle!";
-            }
         }
 
-        public bool TryGetParamValue(out float val)
-        {
-            val = -1;
-            if (paramField)
-            {
-                return float.TryParse(paramField.text, out val);
-            }
-
-            return false;
-        }
+        //
+        // public bool TryGetParamValue(out float val)
+        // {
+        //     val = -1;
+        //     if (paramField)
+        //     {
+        //         return float.TryParse(paramField.text, out val);
+        //     }
+        //
+        //     return false;
+        // }
 
         public bool GetForwardRayHit(out RaycastHit hit)
         {
-            return Physics.Raycast(_camTr.position, _camTr.forward, out hit);
+            return Physics.Raycast(camTr.position, camTr.forward, out hit);
         }
 
         public void SetArObject2Transform(Transform arObjectTransform)
@@ -104,8 +102,8 @@ namespace Code
             
             if (!(Time.realtimeSinceStartup - _prevTime > movementTrackingInterval)) return;
             
-            var movementDist = Vector3.Distance(_camTr.position, _camPrevPosition);
-            _camPrevPosition = _camTr.position;
+            var movementDist = Vector3.Distance(camTr.position, _camPrevPosition);
+            _camPrevPosition = camTr.position;
             _prevTime = Time.realtimeSinceStartup;
             
             var currentMovementStatus = movementDist > movementThreshold;
@@ -126,7 +124,7 @@ namespace Code
         {
             if (!arObjectTr) return;
 
-            var distance = Vector3.Distance(_camTr.position,
+            var distance = Vector3.Distance(camTr.position,
                 arObjectTr.position);
             
             if (isDebugInfoShown && objPosTxt && distanceToObjTxt)
