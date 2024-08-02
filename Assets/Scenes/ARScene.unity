@@ -514,7 +514,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &588159597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1779,6 +1779,7 @@ MonoBehaviour:
   objPosTxt: {fileID: 2009750162}
   titlTxt: {fileID: 1322165936}
   movedTxt: {fileID: 1495040962}
+  paramField: {fileID: 0}
   camTr: {fileID: 0}
 --- !u!4 &1593050917
 Transform:
