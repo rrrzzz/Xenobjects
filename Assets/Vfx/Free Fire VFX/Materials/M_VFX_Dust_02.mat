@@ -98,7 +98,7 @@ Material:
     - _DoubleSidedNormalMode: 2
     - _Dst1: 10
     - _DstBlend: 10
-    - _EmissionIntensity: 0
+    - _EmissionIntensity: 0.54
     - _Emissive: 0
     - _Emissive_Amount: 10
     - _EnableFogOnTransparent: 1
@@ -160,7 +160,7 @@ Material:
     - _ZWrite1: 0
     - __dirty: 0
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 0}
+    - _Color: {r: 0.672739, g: 0, b: 1, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _MaskMoveScale: {r: 1, g: 1, b: 0, a: 0}

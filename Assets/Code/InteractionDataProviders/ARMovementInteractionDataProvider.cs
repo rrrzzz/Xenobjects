@@ -39,13 +39,18 @@ namespace Code
         {
             if (Input.touchCount == 1)
             {
-                SingleTouchEvent.Invoke();
+                var touch = Input.GetTouch(0);
+                if (touch.phase != TouchPhase.Began) 
+                    return;
+                
                 if (isDebugInfoShown)
                 {
                     titlTxt.text = "Single Touch at: " + Time.time;
                 }
+                SingleTouchEvent.Invoke();
                 return;
             }
+            
             if (Input.touchCount != 2) return;
             
             var touch1 = Input.GetTouch(0);

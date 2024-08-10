@@ -20,6 +20,13 @@ public class ParamsPrinter : MonoBehaviour
         print(FormatColor(mat.GetColor("_TintColor")));
     }
     
+    [Button]
+    public void PrintColorPs()
+    {
+        var mat = GetComponent<ParticleSystem>().GetComponent<Renderer>().sharedMaterial;
+        print(FormatColor(mat.GetColor("_TintColor")));
+    }
+    
     private string FormatVector3(Vector3 vec3)
     {
         // Format each component to the desired format with 'f' suffix and specified precision

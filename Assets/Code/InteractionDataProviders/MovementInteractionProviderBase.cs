@@ -1,3 +1,4 @@
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -25,6 +26,7 @@ namespace Code
         [SerializeField] protected TMP_InputField paramField;
         
         public float DistanceToArObject01 { get; set; }
+        public float DistanceToArObjectRaw { get; set; }
         public float TiltZ01 { get; set; }
         public float SignedTiltZ01 { get; set; }
         public float SignedTiltY01 { get; set; }
@@ -66,27 +68,20 @@ namespace Code
         }
 
         
-        public bool TryGetParamValue(out Vector3 val)
+        public bool TryGetParamValue(out float[] val)
         {
-            val = Vector3.one;
+            val = new float[]{0,0,0,0,0};
 
             if (paramField)
             {
                 // Split the string by commas
                 string[] parts = paramField.text.Split(',');
 
-                // Ensure the string has exactly 3 parts
-                if (parts.Length != 3)
+                for (int i = 0; i < parts.Length; i++)
                 {
-                    throw new System.FormatException("Input string must have exactly three components separated by commas.");
+                    val[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
                 }
-
-                // Parse each component as a float
-                float x = float.Parse(parts[0]);
-                float y = float.Parse(parts[1]);
-                float z = float.Parse(parts[2]);
                 
-                val = new Vector3(x, y, z);
                 return true;
             }
         
@@ -98,10 +93,10 @@ namespace Code
             return Physics.Raycast(camTr.position, camTr.forward, out hit);
         }
 
-        public void SetArObject2Transform(Transform arObjectTransform)
+        public void SetArObjectTransform(Transform arObjectTransform)
         {
             arObjectTr = arObjectTransform;
-            arObjectTr.GetComponentInChildren<ArObject2Manager>().Initialize(this);
+            arObjectTr.GetComponentInChildren<ArObjectManagerBase>().Initialize(this);
         }
 
         private void UpdateMovementStatus()
@@ -140,16 +135,16 @@ namespace Code
         {
             if (!arObjectTr) return;
 
-            var distance = Vector3.Distance(camTr.position,
+            DistanceToArObjectRaw = Vector3.Distance(camTr.position,
                 arObjectTr.position);
             
             if (isDebugInfoShown && objPosTxt && distanceToObjTxt)
             {
                 objPosTxt.text = "obj pos: " +  arObjectTr.position;
-                distanceToObjTxt.text = "Dist to obj: " + distance;
+                distanceToObjTxt.text = "Dist to obj: " + DistanceToArObjectRaw;
             }
             
-            DistanceToArObject01 = 1 - Mathf.InverseLerp(minDistance, maxDistance, distance);
+            DistanceToArObject01 = 1 - Mathf.InverseLerp(minDistance, maxDistance, DistanceToArObjectRaw);
         }
         
         protected static Vector3 NormalizeRotationAngles(Vector3 rotation)

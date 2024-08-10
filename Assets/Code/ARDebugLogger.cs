@@ -19,6 +19,17 @@ public class ARDebugLogger : MonoBehaviour
         Application.logMessageReceived -= HandleLog;
     }
 
+    public void PrintDebugMessage(string message)
+    {
+        logQueue.Enqueue(message);
+        if (logQueue.Count > maxLines)
+        {
+            logQueue.Dequeue();
+        }
+
+        consoleOutput.text = string.Join("\n", logQueue);
+    }
+
     void HandleLog(string logString, string stackTrace, LogType type)
     {
         if (type != LogType.Error)

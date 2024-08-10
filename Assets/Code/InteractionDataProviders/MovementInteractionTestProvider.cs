@@ -9,7 +9,7 @@ namespace Code
         protected override void Awake()
         {
             base.Awake();
-            SetArObject2Transform(arObjectTr);
+            SetArObjectTransform(arObjectTr);
         }
 
         protected override void UpdatePhoneTiltAngle()

@@ -10,7 +10,13 @@ namespace Code
 {
     public class ArObject2Manager : ArObjectManagerBase
     {
+        private const float FogDistanceMin = 0.7f;
+        private const float FogDistanceMax = 2f;
+        private const float FogMin = .5f;
+        private const float FogMax = 10;
+        
         public ParticleSystem swarmParticles;
+        public ParticleSystem fogParticleSystem;
         public float puzzleXOffset;
         public float puzzleYOffset;
         public float puzzleAppearingTime = 1f;
@@ -28,7 +34,6 @@ namespace Code
         public SplineMeshTiling puzzleTentacleSpline;
         public SplineMeshTiling puzzleEndTentacleSpline;
         
-        public GameObject steamObj;
         public Transform orbObj;
         public GameObject inkLinesObj;
         public GameObject capsuleObj;
@@ -41,7 +46,6 @@ namespace Code
         private OrbGlowingEffect _orbGlow = new OrbGlowingEffect();
         private OrbGlowingEffect _puzzleGlow = new OrbGlowingEffect();
         private DistortionEffect _distortion = new DistortionEffect();
-        private RisingSteamEffect _risingSteamEffect = new RisingSteamEffect();
         private InkLinesEffect _inkLinesEffect = new InkLinesEffect();
         
         private bool _isTouchToggleOn;
@@ -65,13 +69,16 @@ namespace Code
         private readonly Color _originalColor = new Color(2.31267f, 1.72440f, 0.73089f, 1.00000f);
         private readonly Color _fadedPuzzleColor = new Color(1.39772f, 1.04183f, 0.44173f, 1.00000f);
 
+ 
+
         public override void Initialize(MovementInteractionProviderBase dataProvider)
         {
+            base.Initialize(dataProvider);
             SetEffectMaterials();
             
             _orbScale = orbObj.localScale;
             
-            DataProvider.DoubleTouchEvent.AddListener(OnDoubleTouch);
+            DataProvider.SingleTouchEvent.AddListener(OnSingleTouch);
             DataProvider.ShakeEvent.AddListener(PlaySwarm);
             
             highResMiddleTentacleSpline.PathEndReachedEvent.AddListener(OnPathEndReached);
@@ -86,6 +93,8 @@ namespace Code
             {
                 return;
             }
+
+            SetFogByDistance();
 
             if (!_wasObjectActivated && DataProvider.IdleDuration > idleDurationThreshold && !_isArObjDisabled)
             {
@@ -105,7 +114,18 @@ namespace Code
                 _distortion.SetOscillatingEffect(oscillationSpeed);
             }
         }
-        
+
+        private void SetFogByDistance()
+        {
+            var t = Mathf.InverseLerp(FogDistanceMin, FogDistanceMax, DataProvider.DistanceToArObjectRaw);
+            var fogValue = Mathf.Lerp(FogMin, FogMax, t);
+            var main = fogParticleSystem.main;
+           
+            var startSize = new ParticleSystem.MinMaxCurve(fogValue, fogValue);
+            startSize.mode = ParticleSystemCurveMode.Constant;
+            main.startSize = startSize;
+        }
+
         [Button]
         private void PlayPathfindingSequence()
         {
@@ -344,20 +364,17 @@ namespace Code
         
         private void FadeOutEffects()
         {
-            _risingSteamEffect.FadeAlpha(orbDecolorationTime, true);
             _distortion.FadeEffects(orbDecolorationTime);
             _inkLinesEffect.FadeAlpha(orbDecolorationTime, true);
         }
         
         private void FadeInEffects()
         {
-            _risingSteamEffect.FadeAlpha(orbDecolorationTime, false);
             _inkLinesEffect.FadeAlpha(orbDecolorationTime, false);
         }
         
         private void SetEffectMaterials()
         {
-            _risingSteamEffect.SetMaterial(steamObj);
             _orbGlow.SetMaterial(orbObj.gameObject);
             _distortion.SetMaterial(capsuleObj);
             _inkLinesEffect.SetMaterial(inkLinesObj);
@@ -400,7 +417,7 @@ namespace Code
             _isPathEndReached = true;
         }
         
-        private void OnDoubleTouch()
+        private void OnSingleTouch()
         {
             if (_isArObjDisabled)
             {
@@ -434,7 +451,7 @@ namespace Code
             
             if (DataProvider)
             {
-                DataProvider.DoubleTouchEvent.RemoveListener(OnDoubleTouch);
+                DataProvider.DoubleTouchEvent.RemoveListener(OnSingleTouch);
                 DataProvider.ShakeEvent.RemoveListener(PlaySwarm);
             }
         }

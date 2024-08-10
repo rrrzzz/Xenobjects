@@ -243,7 +243,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 0, w: -564.5188}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -291,7 +291,9 @@ MonoBehaviour:
       m_Calls: []
   imagePosRotTxt: {fileID: 188514363}
   trackedImgManager: {fileID: 1914011442}
-  contentPrefab: {fileID: 9118011229233515491, guid: a7427ba2c9bc7034f84859374bd47164, type: 3}
+  arObject1Prefab: {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
+  arObject2Prefab: {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+  arObject3Prefab: {fileID: 2546783936141597339, guid: 2aa2ae28444b3f44fb956827f8541bd2, type: 3}
   isSpawned: 0
   spawnedContent: {fileID: 0}
   dataProvider: {fileID: 1593050916}
@@ -818,8 +820,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -904,8 +906,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 3.2612, y: -250}
-  m_SizeDelta: {x: 320.2657, y: 72.3959}
+  m_AnchoredPosition: {x: -36.024963, y: -182.87723}
+  m_SizeDelta: {x: 319.6875, y: 86.7217}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &813847034
 MonoBehaviour:
