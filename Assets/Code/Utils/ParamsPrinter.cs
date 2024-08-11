@@ -6,6 +6,11 @@ using UnityEngine;
 [ExecuteAlways]
 public class ParamsPrinter : MonoBehaviour
 {
+    [Button]
+    public void PrintPos()
+    {
+        print(FormatVector3(transform.position));
+    }
     
     [Button]
     public void PrintLocalPos()
@@ -35,7 +40,7 @@ public class ParamsPrinter : MonoBehaviour
         string z = vec3.z.ToString("0.000") + "f";
 
         // Combine the formatted components into the final string
-        return $"({x}, {y}, {z})";
+        return $"new Vector3 ({x}, {y}, {z});";
     }
     
     private string FormatColor(Color color)

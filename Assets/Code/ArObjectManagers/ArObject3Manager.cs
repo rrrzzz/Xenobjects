@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using Code;
 using Code.Utils;
+using EasyButtons;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 public class ArObject3Manager : ArObjectManagerBase
 {
+    private const float RibbonStartSizeDef = .1f;
+    private const float RibbonLifetimeDef = 1;
     private const float ColorFromWhiteThreshold = 310f;
     private const float ColorToWhiteHue = 260f;
     private const float SnowMinParticles = 50;
@@ -17,17 +19,19 @@ public class ArObject3Manager : ArObjectManagerBase
     private const float SnowMinStartSize = 1.0297f;
     private const float SnowMaxStartSize = 2f;
     
+    public ParticleSystem[] ribbons;
     public ParticleSystem objectCoreGlowPs;
     public ParticleSystem snowPs1;
     public ParticleSystem snowPs2;
     public ParticleSystem smokePs;
-    
+
+    public float ribbonStartSizeMax = .1f;
+    public float ribbonLifetimeMax = 1;
     public float snowDistanceMin = 0.7f;
     public float snowDistanceMax = 2.5f;
     public float oscillationSpeed = 1;
     public float idleDurationThreshold = 8;
     public float rotationDelay = 4;
-    public float maxSmokeIntensity = 4;
     
     public RotateAroundObject rotationScript;
 
@@ -41,7 +45,7 @@ public class ArObject3Manager : ArObjectManagerBase
     private float _smokeAlpha;
     private readonly Stopwatch _oscillationTimer = new Stopwatch();
     private bool _isOscillating;
-    private float _smokeIntensityMultiplier;
+    private bool _isEndingOscillation;
 
     public override void Initialize(MovementInteractionProviderBase dataProvider)
     {
@@ -51,7 +55,6 @@ public class ArObject3Manager : ArObjectManagerBase
         _startTime = Time.realtimeSinceStartup;
         _smokeMat = smokePs.GetComponent<Renderer>().material;
         _smokeAlpha = _smokeMat.GetColor(_smokeTintColor).a;
-        _smokeIntensityMultiplier = Mathf.Pow(2, maxSmokeIntensity);
     }
 
     private void Update()
@@ -60,15 +63,15 @@ public class ArObject3Manager : ArObjectManagerBase
         {
             return;
         }
+        
+        if (_isOscillating || _isEndingOscillation)
+        {
+            SetOscillatingEffect();
+        }
 
         UpdateSmokeAndCoreGlow();
         UpdateSnowByDistance(snowPs1);
         UpdateSnowByDistance(snowPs2);
-        
-        if (_isOscillating)
-        {
-            SetOscillatingEffect();
-        }
 
         if (!_delayPassed && Time.realtimeSinceStartup - _startTime > rotationDelay)
         {
@@ -91,7 +94,6 @@ public class ArObject3Manager : ArObjectManagerBase
     private void UpdateSmokeAndCoreGlow()
     {
         var currentColor = Mathf.Lerp(_glowColorHMin, _glowColorHMax, DataProvider.TiltZ01);
-        Debug.Log(currentColor);
         Color rgb;
         
         if (currentColor >= ColorFromWhiteThreshold)
@@ -106,8 +108,6 @@ public class ArObject3Manager : ArObjectManagerBase
         else if (currentColor is < ColorFromWhiteThreshold and >= ColorToWhiteHue)
         {
             var saturation = (ColorFromWhiteThreshold - currentColor) / (ColorFromWhiteThreshold - ColorToWhiteHue);
-            Debug.Log("Sat " + saturation);
-
             rgb = Color.HSVToRGB(ColorToWhiteHue / 360f, saturation, 1);
         }
         else
@@ -125,19 +125,33 @@ public class ArObject3Manager : ArObjectManagerBase
     
     private void OnSingleTouch()
     {
-        // var col = new Vector4(168.89700f, 0.00000f, 7.64637f, 0.10000f);
-        // _smokeMat.SetColor(_smokeTintColor, col);
-        // ToggleOscillatingEffect();
+        ToggleOscillatingEffect();
     }
 
     private void SetOscillatingEffect()
     {
         var t = _oscillationTimer.ElapsedMilliseconds / 1000f * oscillationSpeed;
-        var currentMultiplier = Mathf.Sin(t) * _smokeIntensityMultiplier;
-        var currentCol = _smokeMat.GetColor(_smokeTintColor);
-        currentCol *= currentMultiplier;
-        currentCol.a = _smokeAlpha;
-        _smokeMat.SetColor(_smokeTintColor, currentCol);
+        var currentT = Mathf.Abs(Mathf.Sin(t));
+        
+        if (_isEndingOscillation)
+        {
+            currentT = Mathf.Min(currentT, 1 - currentT);
+            if (currentT < 0.05f)
+            {
+                _isEndingOscillation = false;
+                _isOscillating = false;
+                _oscillationTimer.Stop();
+            }
+        }
+        
+        var currentLifetime = Mathf.Lerp(RibbonLifetimeDef, ribbonLifetimeMax, currentT);
+        var currentSize = Mathf.Lerp(RibbonStartSizeDef, ribbonStartSizeMax, currentT);
+        foreach (var ps in ribbons)
+        {
+            var main = ps.main;
+            main.startSize = currentSize;
+            main.startLifetime = currentLifetime;
+        }
     }
     
     private void UpdateSnowByDistance(ParticleSystem snowPs)
@@ -155,16 +169,18 @@ public class ArObject3Manager : ArObjectManagerBase
         main.maxParticles = Mathf.RoundToInt(particleCount);
     }
 
+    [Button]
     private void ToggleOscillatingEffect()
     {
         _isOscillating = !_isOscillating;
         if (_isOscillating)
         {
+            _isEndingOscillation = false;
             _oscillationTimer.Start();
         }
         else
         {
-            _oscillationTimer.Stop();
+            _isEndingOscillation = true;
         }
     }
 }

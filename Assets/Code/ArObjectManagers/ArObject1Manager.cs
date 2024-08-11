@@ -5,24 +5,23 @@ namespace Code
 {
     public class ArObject1Manager : ArObjectManagerBase
     {
-        public const float TornadoMin = 0;
-        public const float TornadoStart = 10f;
-        public const float TornadoMax = 255f;
-        
         public float startDelay = 4;
-        public float distanceMin = 0.7f;
-        public float distanceMax = 2.5f;
         public float idleDurationMax = 4;
-        public float movingDurationMax = 4; 
-        
-        public ParticleSystem tornadoPs;
+        public float movingDurationMax = 4;   
+        public float tornadoMinDistance = .7f;
+        public float tornadoMaxDistance = 3f;
+
+        public Transform tornadoTransform;
         public ParticleSystem gasPs;
         
         private bool _delayPassed;
         private float _startTime;
         
-        private Material _tornadoMat;
-        private static readonly int TornadoTint = Shader.PropertyToID("_TintColor");
+        private Vector3 _tornadoInitPos = new Vector3 (-10.443f, 18.035f, -0.203f);
+        private Vector3 _tornadoFinalPos = new Vector3 (1.2f, -11.400f, -0.203f);
+        private Vector3 _tornadoInitScale = new Vector3(1.466175f, 1.466175f, 1.466175f);
+        private Vector3 _tornadoFinalScale = new Vector3(16.91379f, 16.91379f, 16.91379f);
+        
         private Material _gasMat;
         private static readonly int GasColorId = Shader.PropertyToID("_Color");
 
@@ -41,12 +40,12 @@ namespace Code
         };
 
         private ParticleSystem[] _particleSystems;
-        
+        private bool _isChangingAlpha = true;
+
         public override void Initialize(MovementInteractionProviderBase dataProvider)
         {
             base.Initialize(dataProvider);
             _startTime = Time.realtimeSinceStartup;
-            _tornadoMat = tornadoPs.GetComponent<Renderer>().material;
             _gasMat = gasPs.GetComponent<Renderer>().material;
             _particleSystems = transform.parent.GetComponentsInChildren<ParticleSystem>();
         }
@@ -57,7 +56,7 @@ namespace Code
             {
                 return;
             }
-            
+
             if (!_delayPassed && Time.realtimeSinceStartup - _startTime < startDelay)
             {
                 return;
@@ -65,7 +64,31 @@ namespace Code
 
             _delayPassed = true;
 
+            UpdateTornadoTransform();
+            if (!_isChangingAlpha)
+            {
+                return;
+            }
             UpdateParticleSystemsVisibilityByMovement();
+        }
+
+        private void UpdateTornadoTransform()
+        {
+            var t = Mathf.InverseLerp(tornadoMinDistance, tornadoMaxDistance, DataProvider.DistanceToArObjectRaw);
+            Debug.Log(t);
+            
+            if (t > 0.2f)
+            {
+                _isChangingAlpha = false;
+                UpdateColorParticleSystems(0, true);
+            }
+            else
+            {
+                _isChangingAlpha = true;
+            }
+            
+            tornadoTransform.localScale = Vector3.Lerp(_tornadoInitScale, _tornadoFinalScale, t);
+            tornadoTransform.localPosition = Vector3.Lerp(_tornadoInitPos, _tornadoFinalPos, t);
         }
 
         private void UpdateParticleSystemsVisibilityByMovement()
@@ -107,9 +130,9 @@ namespace Code
 
         private void UpdateMaterialParticleSystems(float t, bool isMoving)
         {
-            var tornadoAlpha = isMoving ? Mathf.Lerp(TornadoStart, TornadoMin, t) : Mathf.Lerp(TornadoStart, TornadoMax, t);
-
-            _tornadoMat.SetColor(TornadoTint, new Vector4(128 / 255f, 128 / 255f, 128 / 255f, tornadoAlpha / 255f));
+            // var tornadoAlpha = isMoving ? Mathf.Lerp(TornadoStart, TornadoMin, t) : Mathf.Lerp(TornadoStart, TornadoMax, t);
+            //
+            // _tornadoMat.SetColor(TornadoTint, new Vector4(128 / 255f, 128 / 255f, 128 / 255f, tornadoAlpha / 255f));
             
             var gasAlpha = isMoving ? Mathf.Lerp(75, 0, t) : Mathf.Lerp(75, 255, t);
             _gasMat.SetColor(GasColorId, new Vector4(154 / 255f, 154 / 255f, 154 / 255f, gasAlpha / 255f));
