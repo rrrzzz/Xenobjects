@@ -96,9 +96,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: object core glow
       objectReference: {fileID: 0}
+    - target: {fileID: 7322222612222457133, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8166705382670077369, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
       propertyPath: m_Name
       value: Object_3_Prod_Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 8449039993515701919, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8799514609479472899, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
       propertyPath: m_LocalScale.x

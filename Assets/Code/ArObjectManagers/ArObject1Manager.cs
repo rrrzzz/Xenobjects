@@ -75,12 +75,11 @@ namespace Code
         private void UpdateTornadoTransform()
         {
             var t = Mathf.InverseLerp(tornadoMinDistance, tornadoMaxDistance, DataProvider.DistanceToArObjectRaw);
-            Debug.Log(t);
             
             if (t > 0.2f)
             {
                 _isChangingAlpha = false;
-                UpdateColorParticleSystems(0, true);
+                UpdateColorParticleSystems(1, true);
             }
             else
             {
