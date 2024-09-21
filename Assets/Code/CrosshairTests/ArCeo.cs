@@ -20,7 +20,6 @@ namespace Code.CrosshairTests
         public TMP_Text anchorRotationText;
         public RectTransform verticalLine;
         public RectTransform horizontalLine;
-        public Button rotateBtn;
         public Image verticalLineImage;
         public Image horizontalLineImage;
         private Vector3 verticalLineRotation = Vector3.zero;
@@ -29,7 +28,6 @@ namespace Code.CrosshairTests
         private ARAnchor _currentAnchor;
         private GameObject _currentPrefab;
         private Vector2 _screenCenter;
-        private bool _isPhoneHorizontal;
         private Color _defCrosshairColor = Color.white;
         private Color _targetCapturedColor = Color.red;
         private Transform _phoneTransform;
@@ -72,6 +70,7 @@ namespace Code.CrosshairTests
 
             var isXCaptured = xError < threshold;
             var isYCaptured = yError < threshold;
+            
             horizontalLineRotation.z = isXCaptured ? 0: -angles.x; 
             verticalLineRotation.z = isYCaptured ? 0: -angles.y;
 
@@ -80,16 +79,12 @@ namespace Code.CrosshairTests
 
             horizontalLine.rotation = Quaternion.Euler(horizontalLineRotation);
             verticalLine.rotation = Quaternion.Euler(verticalLineRotation);
-
-            if (isXCaptured &&
-                isYCaptured)
-            {
-                _isPhoneHorizontal = true;
-            }
-            else
-            {
-                _isPhoneHorizontal = false;
-            }
+            
+            // if (!(isXCaptured &&
+            //       isYCaptured))
+            // {
+            //     return;
+            // }
             
             if (!_planeWasAdded) return;
             
