@@ -8,9 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ARScene.unity
     guid: 4755b35b590504809a7525fd2109c2e2
-  - enabled: 0
-    path: Assets/Scenes/CrosshairTest.unity
-    guid: 70cd5ca87282b154aa405acb2111582c
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: ab5e1320379548042a2c82db463ce1fd, type: 2}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 9468b69d976bb774caf869d746fb5250, type: 2}
