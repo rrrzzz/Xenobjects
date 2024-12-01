@@ -1,5 +1,4 @@
 using System.Collections;
-using Code;
 using TMPro;
 using Unity.Collections;
 using UnityEngine;
@@ -8,25 +7,35 @@ using UnityEngine.XR.ARFoundation;
 
 public class ARColorAnalyzer : MonoBehaviour
 {
-    public ARMovementInteractionDataProvider dataProvider;
+    public const int NearGreyThreshold = 30;
+    public const int ColorDominanceThreshold = 10;
+    public const float PercentagePixelCountThreshold = 10;
+    
     public ARCameraManager cameraManager;
-    public TMP_Text _colorText;
+    public TMP_Text colorText;
     public int regionSize = 30;
     
-    [HideInInspector] public Color crossColor;
-    [HideInInspector] public bool isProcessingImage = true;
+    [HideInInspector] public Color dominantColor;
+    [HideInInspector] public bool isProcessingImage;
     [HideInInspector] public bool isProcessingSuccess;
     
     private XRCpuImage.ConversionParams _conversionParams;
-    
+
     private void Start()
     {
-        dataProvider.SingleTouchEvent.AddListener(TryCaptureImage);
+        // dataProvider.SingleTouchEvent.AddListener(TryCaptureImage);
     }
- 
+    
     public void TryCaptureImage()
     {
+        if (isProcessingImage)
+        {
+            return;
+        }
+        
         isProcessingImage = true;
+        isProcessingSuccess = false;
+        
         if (cameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
         {
             StartCoroutine(DetermineColorCpuImage(cpuImage));
@@ -34,12 +43,11 @@ public class ARColorAnalyzer : MonoBehaviour
         else
         {
             isProcessingImage = false;
-            isProcessingSuccess = false;
             Debug.LogError("Failed to acquire latest CPU image.");
         }
     }
 
-    IEnumerator DetermineColorCpuImage(XRCpuImage cpuImage)
+    private IEnumerator DetermineColorCpuImage(XRCpuImage cpuImage)
     {
         int centerX = cpuImage.width / 2;
         int centerY = cpuImage.height / 2;
@@ -80,7 +88,6 @@ public class ARColorAnalyzer : MonoBehaviour
         if (asyncConversion.status != XRCpuImage.AsyncConversionStatus.Ready)
         {
             isProcessingImage = false;
-            isProcessingSuccess = false;
             Debug.LogError("Failed to convert the CPU image.");
             cpuImage.Dispose();
             yield break;
@@ -93,106 +100,25 @@ public class ARColorAnalyzer : MonoBehaviour
         if (!data.IsCreated)
         {
             isProcessingImage = false;
-            isProcessingSuccess = false;
             Debug.LogError("Failed to retrieve CPU image data.");
             asyncConversion.Dispose();
             yield break;
         }
 
         // Analyze the raw pixel data directly
-        crossColor = DetermineDominantColorChatGPT(data);
-        isProcessingImage = false;
+        dominantColor = DetermineDominantColorChatGpt(data);
         isProcessingSuccess = true;
+        isProcessingImage = false;
         
         asyncConversion.Dispose();
     }
     
-    private Color DetermineDominantColorChatGPT(NativeArray<byte> rawImageData)
-{
-    var colorDifferenceThreshold = 90;    // Threshold to skip near-grey pixels
-    var colorDominanceThreshold = 200;     // Threshold to consider a color channel dominant
-    var percentageThreshold = 80f;        // Percentage to decide if a color is dominant
-    int redPixelsCount = 0;
-    int bluePixelsCount = 0;
-    int greenPixelsCount = 0;
-    int totalPixels = 0;
-    
-    // Each pixel consists of 4 bytes: RGBA
-    for (int i = 0; i < rawImageData.Length; i += 4)
+    private Color DetermineDominantColorChatGpt(NativeArray<byte> rawImageData)
     {
-        byte r = rawImageData[i];     // Red channel (0-255)
-        byte g = rawImageData[i + 1]; // Green channel (0-255)
-        byte b = rawImageData[i + 2]; // Blue channel (0-255)
-
-        totalPixels++;
-
-        // Skip near-grey pixels
-        if (Mathf.Abs(r - g) < colorDifferenceThreshold &&  
-            Mathf.Abs(r - b) < colorDifferenceThreshold && 
-            Mathf.Abs(g - b) < colorDifferenceThreshold)
-        {
-            continue;
-        }
-
-        // Determine if this pixel is close to a solid color
-        if (r - g > colorDominanceThreshold && r - b > colorDominanceThreshold)
-        {
-            redPixelsCount++;
-        }
-        else if (g - r > colorDominanceThreshold && g - b > colorDominanceThreshold)
-        {
-            greenPixelsCount++;
-        }
-        else if (b - r > colorDominanceThreshold && b - g > colorDominanceThreshold)
-        {
-            bluePixelsCount++;
-        }
-    }
-
-    // Calculate percentages
-    float redPercentage = (float)redPixelsCount / totalPixels * 100f;
-    float greenPercentage = (float)greenPixelsCount / totalPixels * 100f;
-    float bluePercentage = (float)bluePixelsCount / totalPixels * 100f;
-
-    // Determine the dominant color based on percentage
-    string dominantColorName;
-    Color dominantColor;
-    
-    if (redPercentage > percentageThreshold)
-    {
-        dominantColorName = "Red";
-        dominantColor = Color.red;
-    }
-    else if (greenPercentage > percentageThreshold)
-    {
-        dominantColorName = "Green";
-        dominantColor = Color.green;
-    }
-    else if (bluePercentage > percentageThreshold)
-    {
-        dominantColorName = "Blue";
-        dominantColor = Color.blue;
-    }
-    else
-    {
-        dominantColorName = "Tie or None";
-        dominantColor = Color.clear;
-    }
-
-    _colorText.text = $"Dominant color is: {dominantColorName}\n" +
-                      $"Red Pixels: {redPixelsCount} ({redPercentage:F2}%)\n" +
-                      $"Green Pixels: {greenPixelsCount} ({greenPercentage:F2}%)\n" +
-                      $"Blue Pixels: {bluePixelsCount} ({bluePercentage:F2}%)";
-    Debug.Log("Dominant color is: " + dominantColorName);
-    
-    return dominantColor;
-}
-    
-    private Color DetermineDominantColor(NativeArray<byte> rawImageData)
-    {
-        var colorDifferenceThreshold = 90;
-
-        float maxRed = 0, maxBlue = 0, maxGreen = 0;
+        int redPixelsCount = 0;
+        int bluePixelsCount = 0;
+        int greenPixelsCount = 0;
+        int totalPixels = 0;
         
         // Each pixel consists of 4 bytes: RGBA
         for (int i = 0; i < rawImageData.Length; i += 4)
@@ -200,69 +126,103 @@ public class ARColorAnalyzer : MonoBehaviour
             byte r = rawImageData[i];     // Red channel (0-255)
             byte g = rawImageData[i + 1]; // Green channel (0-255)
             byte b = rawImageData[i + 2]; // Blue channel (0-255)
-
-            if (Mathf.Abs(r - g) < colorDifferenceThreshold &&  
-                Mathf.Abs(r - b) < colorDifferenceThreshold && 
-                Mathf.Abs(g - b) < colorDifferenceThreshold)
+    
+            // Skip near-grey pixels
+            if (Mathf.Abs(r - g) < NearGreyThreshold &&  
+                Mathf.Abs(r - b) < NearGreyThreshold && 
+                Mathf.Abs(g - b) < NearGreyThreshold)
             {
-                // If the difference between the channels is small, skip this pixel
                 continue;
             }
 
-            maxRed = Mathf.Max(r, maxRed);
-            maxBlue = Mathf.Max(b, maxBlue);
-            maxGreen = Mathf.Max(g, maxGreen);
-        }
+            var isColorPixel = true;
 
-        // Determine the dominant color
+
+            if (r - g > ColorDominanceThreshold && r - b > ColorDominanceThreshold)
+            {
+                redPixelsCount++;
+            }
+            else if (g - r > ColorDominanceThreshold && g - b > ColorDominanceThreshold)
+            {
+                greenPixelsCount++;
+            }
+            else if (b - r > ColorDominanceThreshold && b - g > ColorDominanceThreshold)
+            {
+                bluePixelsCount++;
+            }
+            else
+            {
+                isColorPixel = false;
+            }
+            
+            // No color dominance threshold
+            // {
+            //     var rMinDif = Mathf.Min(r - g, r - b);
+            //     var gMinDif = Mathf.Min(g - r, g - b);
+            //     var bMinDif = Mathf.Min(b - r, b - g);
+            //     
+            //     if (rMinDif > gMinDif && rMinDif > bMinDif)
+            //     {
+            //         redPixelsCount++;
+            //     }
+            //     else if (gMinDif > rMinDif && gMinDif > bMinDif)
+            //     {
+            //         greenPixelsCount++;
+            //     }
+            //     else if (bMinDif > rMinDif && bMinDif > gMinDif)
+            //     {
+            //         bluePixelsCount++;
+            //     }
+            // }
+            
+            if (isColorPixel)
+            {
+                totalPixels++;
+            }
+        }
+    
+        totalPixels = totalPixels == 0 ? 1 : totalPixels;
+        
+        // Calculate percentages
+        float redPercentage = (float)redPixelsCount / totalPixels * 100f;
+        float greenPercentage = (float)greenPixelsCount / totalPixels * 100f;
+        float bluePercentage = (float)bluePixelsCount / totalPixels * 100f;
+    
+        // Determine the dominant color based on percentage
         string dominantColorName;
         Color dominantColor;
         
-        if (maxRed > maxBlue && maxRed > maxGreen)
+        if (redPercentage > greenPercentage && redPercentage > bluePercentage && redPercentage > PercentagePixelCountThreshold)
         {
             dominantColorName = "Red";
             dominantColor = Color.red;
         }
-        else if (maxBlue > maxRed && maxBlue > maxGreen)
-        {
-            dominantColorName = "Blue";
-            dominantColor = Color.blue;
-        }
-        else if (maxGreen > maxRed && maxGreen > maxBlue)
+        else if (greenPercentage > redPercentage && greenPercentage > bluePercentage && greenPercentage > PercentagePixelCountThreshold)
         {
             dominantColorName = "Green";
             dominantColor = Color.green;
         }
+        else if (bluePercentage > greenPercentage && bluePercentage > redPercentage && bluePercentage > PercentagePixelCountThreshold)
+        {
+            dominantColorName = "Blue";
+            dominantColor = Color.blue;
+        }
         else
         {
             dominantColorName = "Tie or None";
-            dominantColor = Color.black;
+            dominantColor = Color.clear;
         }
-        
-        _colorText.text = $"Dominant color is: {dominantColorName}\n" +
-                         $"Max Red: {maxRed}\n" +
-                         $"Max Blue: {maxBlue}\n" +
-                         $"Max Green: {maxGreen}";
+    
+        if (colorText)
+        {
+            colorText.text = $"Dominant color is: {dominantColorName}\n" +
+                              $"Red Pixels: {redPixelsCount} ({redPercentage:F2}%)\n" +
+                              $"Green Pixels: {greenPixelsCount} ({greenPercentage:F2}%)\n" +
+                              $"Blue Pixels: {bluePixelsCount} ({bluePercentage:F2}%)";
+        }
+    
         Debug.Log("Dominant color is: " + dominantColorName);
         
         return dominantColor;
-    }
-
-    // Color analysis methods using 0-255 range
-    bool IsRed(byte r, byte g, byte b)
-    {
-        // A pixel is considered red if the red component is significantly higher than green and blue
-        return r > 20 && r > g && r > b;
-    }
-
-    bool IsBlue(byte r, byte g, byte b)
-    {
-        // A pixel is considered blue if the blue component is significantly higher than red and green
-        return b > 20 && b > r && b > g;
-    }
-
-    bool IsGreen(byte r, byte g, byte b)
-    {
-        return g > 20 && g > b && g > r;
     }
 }

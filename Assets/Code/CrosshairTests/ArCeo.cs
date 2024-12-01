@@ -10,13 +10,16 @@ namespace Code.CrosshairTests
 {
     public class ArCeo : MonoBehaviour
     {
+        private const float CheckTimeoutAfterSpawn = 10;
+        
+        // public Button captureButton;
         public ARAnchorManager anchorManager;
         public ARRaycastManager raycastManager;
-        public ARPlaneManager planeManager;
         public GameObject crosshair;
+        public GameObject planeScanTip;
         public GameObject prefab;
         public GameObject[] prefabs;
-        public TMP_InputField offsetText;
+        public TMP_InputField inputFloats;
         public float crosshairAimingThreshold = 2;
         public float horizontalThreshold = 10;
         public float horizontalCheckInterval = 1;
@@ -41,17 +44,27 @@ namespace Code.CrosshairTests
         private bool _isFirstCapture;
         private float _horizontalCheckStartTime;
         private bool _checkingIfSeeingTarget;
-        private float _checkTimeoutAfterSpawn = 5;
         private bool _isTargetFound;
+        private List<ARRaycastHit> _planeHits = new List<ARRaycastHit>();
+        private int _currentTestingFunctionalityIdx;
+        private bool _hasTouchedScreen;
 
         private void Start()
         {
+            // captureButton.onClick.AddListener(() =>
+            // {
+            //     if (colorAnalyzer.isProcessingImage)
+            //     {
+            //         return;
+            //     }
+            //     colorAnalyzer.TryCaptureImage();
+            // });
+            
             _phoneTransform = Camera.main.transform;
             Input.gyro.enabled = true;
-            planeManager.planesChanged += HandlePlanesChanged; 
             float centerX = Screen.width / 2f;
             float centerY = Screen.height / 2f;
-
+        
             var lineLength = Mathf.Min(centerX, centerY);
             var lineWidth = verticalLine.rect.width;
             
@@ -60,42 +73,49 @@ namespace Code.CrosshairTests
             
             _screenCenter = new Vector2(centerX, centerY);
             _horizontalCheckStartTime = Time.realtimeSinceStartup;
-        }
-
-        private void HandlePlanesChanged(ARPlanesChangedEventArgs args)
-        {
-            if (args.added.Count == 0 || _planeWasAdded) return;
             
-            _planeWasAdded = true;
-            crosshair.SetActive(true);
         }
 
         private void Update()
         {
-            if (colorAnalyzer.isProcessingImage)
+            if (ARSession.state != ARSessionState.SessionTracking)
             {
+                anchorRotationText.text = "AR Session not tracking";
                 return;
             }
             
-            if (Time.realtimeSinceStartup - _horizontalCheckStartTime > horizontalCheckInterval 
-                && !_checkingIfSeeingTarget && !_isTargetFound)
+            if (colorAnalyzer.isProcessingImage)
             {
-                _horizontalCheckStartTime = Time.realtimeSinceStartup;
-                if (!CheckPhoneHorizontal())
+                anchorRotationText.text = "Processing image, " + (_checkingIfSeeingTarget ? "checking if seeing cross" : "");
+                return;
+            }
+
+            if (!_checkingIfSeeingTarget && !_isTargetFound)
+            {
+                if (Time.realtimeSinceStartup - _horizontalCheckStartTime >= horizontalCheckInterval)
                 {
-                    return;
+                    anchorRotationText.text = "Checking if phone is horizontal";
+                    _horizontalCheckStartTime = Time.realtimeSinceStartup;
+                    if (!CheckPhoneApproximatelyHorizontal())
+                    {
+                        return;
+                    }
+                    anchorRotationText.text = "Phone is roughly horizontal";
+
+                    // Debug.Log("Phone is roughly horizontal");
+                    colorAnalyzer.TryCaptureImage();
+                    _checkingIfSeeingTarget = true;
                 }
-                Debug.Log("Phone is roughly horizontal");
-                colorAnalyzer.TryCaptureImage();
-                _checkingIfSeeingTarget = true;
+                return;
             }
 
             if (_checkingIfSeeingTarget && colorAnalyzer.isProcessingSuccess)
             {
-                var color = colorAnalyzer.crossColor;
+                anchorRotationText.text = "Checking if seeing cross, found color " + colorAnalyzer.dominantColor;
+                var color = colorAnalyzer.dominantColor;
                 if (color != Color.clear)
                 {
-                    Debug.Log(color + " color detected");
+                    anchorRotationText.text = "Color detected: " + color;
                     colorAnalyzer.isProcessingSuccess = false;
                     _checkingIfSeeingTarget = false;
                     _isTargetFound = true;
@@ -104,49 +124,167 @@ namespace Code.CrosshairTests
                 colorAnalyzer.isProcessingSuccess = false;
                 _checkingIfSeeingTarget = false;
             }
+            else if (_checkingIfSeeingTarget && !colorAnalyzer.isProcessingSuccess)
+            {
+                anchorRotationText.text = "Image processing while _checkingIfSeeingTarget failed";
+                _checkingIfSeeingTarget = false;
+                return;
+            }
 
             if (_isTargetFound && !_planeWasAdded)
             {
-                //TODO: add instructions to move phone to create plane before showing crosshair
-                // shoot a ray to see if there is a plane underneath and if not show instructions
-                // think how to visualize plane and if it's needed at all
-                return;
+                raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
+                if (_planeHits.Count != 0)
+                {
+                    anchorRotationText.text = "Plane found";
+
+                    _planeWasAdded = true;
+                    planeScanTip.SetActive(false);
+                }
+                else
+                {
+                    anchorRotationText.text = "No plane, showing tip";
+                    planeScanTip.SetActive(true);
+                }
             }
             
             if (!_planeWasAdded || !_isTargetFound) return;
+
+            if (!crosshair.activeInHierarchy)
+            {
+                crosshair.SetActive(true);
+            }
             
+            anchorRotationText.text = "Checking if phone aligned with crosshair";
             if (!CheckPhoneAlignedWithCrosshair())
             {
                 return;
             }
-            
-            // if (!_planeWasAdded) return;
 
-            if (Input.touchCount == 1 && !colorAnalyzer.isProcessingImage)
+            anchorRotationText.text = "Phone aligned, waiting for tap";
+            if (Input.touchCount == 1)
             {
+                var touch = Input.GetTouch(0);
+                if (touch.phase != TouchPhase.Began) 
+                    return;
+                _hasTouchedScreen = true;
                 colorAnalyzer.TryCaptureImage();
                 return;
             }
             
-            if (colorAnalyzer.isProcessingImage) return;
+            if (!_hasTouchedScreen)
+            {
+                return;
+            }
 
-            if (!colorAnalyzer.isProcessingSuccess) return;
+            if (colorAnalyzer.dominantColor == Color.clear)
+            {
+                anchorRotationText.text = "No color detected when phone aligned with crosshair, probably moved it away.";
+                colorAnalyzer.isProcessingSuccess = false;
+                _hasTouchedScreen = false;
+                return;
+            }
             
             colorAnalyzer.isProcessingSuccess = false;
             
-            var hits = new List<ARRaycastHit>();
-            raycastManager.Raycast(_screenCenter, hits, TrackableType.Planes);
-
-            if (hits.Count != 0)
+            raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
+            crosshair.SetActive(false);
+            
+            if (_planeHits.Count != 0)
             {
-                if (colorAnalyzer.crossColor != Color.clear)
+                if (colorAnalyzer.dominantColor != Color.clear)
                 {
-                    SetPrefabBasedOnColor(colorAnalyzer.crossColor);
-                    CreateAnchor(hits[0]);
+                    SetPrefabBasedOnColor(colorAnalyzer.dominantColor);
+                    CreateAnchor(_planeHits[0]);
                 }
                 
-                _horizontalCheckStartTime = Time.realtimeSinceStartup - _checkTimeoutAfterSpawn;
+                _horizontalCheckStartTime = Time.realtimeSinceStartup + CheckTimeoutAfterSpawn;
                 _isTargetFound = false;
+                anchorRotationText.text = $"Waiting for {CheckTimeoutAfterSpawn}s check timeout to expire";
+            }
+            
+            _planeWasAdded = false;
+            _hasTouchedScreen = false;
+        }
+
+        private void TestFunctionalityById()
+        {
+            var previousTestingFunctionalityIdx = _currentTestingFunctionalityIdx;
+            _currentTestingFunctionalityIdx = TryGetParamValue(inputFloats, out var val) ? (int)val[0] : 0;
+            
+            switch (_currentTestingFunctionalityIdx)
+            {
+                case 0:
+                    anchorRotationText.text = "No testing functionality selected";
+                    return;
+                case 1:
+                {
+                    var isApproxHorizontal = CheckPhoneApproximatelyHorizontal();
+                    anchorRotationText.text += "\nPhone is approx horizontal: " + isApproxHorizontal;
+                    return;
+                }
+                case 2:
+                {
+                    var isAligned = CheckPhoneAlignedWithCrosshair();
+                    anchorRotationText.text += "\nPhone is aligned with crosshair: " + isAligned;
+                    return;
+                }
+                case 3:
+                {
+                    if (colorAnalyzer.isProcessingImage)
+                    {
+                        if (anchorRotationText.text.Contains("Processing image"))
+                        {
+                            return;
+                        }
+                        anchorRotationText.text += " Processing image";
+                    }
+                
+                    if (colorAnalyzer.isProcessingSuccess)
+                    {
+                        anchorRotationText.text = "Color detected: " + colorAnalyzer.dominantColor;
+                        return;
+                    }
+                
+                    if (Input.touchCount == 2)
+                    {
+                        var touch = Input.GetTouch(0);
+                        if (touch.phase != TouchPhase.Began) 
+                            return;
+                        
+                        anchorRotationText.text = "Capturing image";
+                        colorAnalyzer.TryCaptureImage();
+                    }
+                    return;
+                }
+                case 4:
+                {
+                    if (previousTestingFunctionalityIdx != _currentTestingFunctionalityIdx)
+                    {
+                        _planeWasAdded = false;
+                    }
+                
+                    if (!_planeWasAdded)
+                    {
+                        raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
+                        if (_planeHits.Count != 0)
+                        {
+                            anchorRotationText.text = "Plane found";
+
+                            _planeWasAdded = true;
+                            planeScanTip.SetActive(false);
+                        }
+                        else
+                        {
+                            anchorRotationText.text = "No plane, showing tip";
+                            planeScanTip.SetActive(true);
+                        }
+                        return;
+                    }
+                    return;
+                }
+                default:
+                    return;
             }
         }
 
@@ -175,8 +313,15 @@ namespace Code.CrosshairTests
             var xError = Mathf.Abs(angles.x);
             var yError = Mathf.Abs(angles.y);
 
-            var isXCaptured = xError < crosshairAimingThreshold;
-            var isYCaptured = yError < crosshairAimingThreshold;
+            var currentAimingThreshold = crosshairAimingThreshold;
+
+            if (TryGetParamValue(inputFloats, out var val))
+            {
+                currentAimingThreshold = val[1] == 0 ? crosshairAimingThreshold : val[1];
+            }
+            
+            var isXCaptured = xError < currentAimingThreshold;
+            var isYCaptured = yError < currentAimingThreshold;
             
             _horizontalLineRotation.z = isXCaptured ? 0: -angles.x; 
             _verticalLineRotation.z = isYCaptured ? 0: -angles.y;
@@ -190,7 +335,7 @@ namespace Code.CrosshairTests
             return isXCaptured && isYCaptured;
         }
 
-        private bool CheckPhoneHorizontal()
+        private bool CheckPhoneApproximatelyHorizontal()
         {
             Quaternion rotation = Input.gyro.attitude;
             Vector2 angles = NormalizeRotationAngles(rotation.eulerAngles);
@@ -200,8 +345,15 @@ namespace Code.CrosshairTests
             var xError = Mathf.Abs(angles.x);
             var yError = Mathf.Abs(angles.y);
 
-            var isXHorizontal = xError < horizontalThreshold;
-            var isYHorizontal = yError < horizontalThreshold;
+            var currentThreshold = horizontalThreshold;
+
+            if (TryGetParamValue(inputFloats, out var val))
+            {
+                currentThreshold = val[1] == 0 ? horizontalThreshold : val[1];
+            }
+
+            var isXHorizontal = xError < currentThreshold;
+            var isYHorizontal = yError < currentThreshold;
             
             return isXHorizontal && isYHorizontal;
         }
@@ -239,13 +391,18 @@ namespace Code.CrosshairTests
             Vector3 offset = _phoneTransform.up * 0.3f;
             
             Quaternion rotation = prefab.transform.rotation;
-            if (TryGetParamValue(offsetText, out var val))
+            if (TryGetParamValue(inputFloats, out var val))
             {
                 offset += _currentAnchor.transform.up * val[0];
                 if (val[1] != 0)
                 {
                     rotation = Quaternion.Euler(0, val[1], 0);
                 }
+            }
+            
+            if (_currentPrefab)
+            {
+                DestroyImmediate(_currentPrefab);
             }
 
             _currentPrefab = Instantiate(prefab, _currentAnchor.transform.position + offset, rotation,
@@ -278,4 +435,20 @@ namespace Code.CrosshairTests
             return false;
         }
     }
+    
+    // private void SetColorAnalyzerParams()
+    // {
+    //     if (TryGetParamValue(inputFloats, out var val2))
+    //     {
+    //         var nearGreyThreshold = val2[0];
+    //         var colorDominanceThreshold = val2[1];
+    //         var percentagePixelCountThreshold = val2[2];
+    //         var useDominanceMetricWithoutThreshold = val2[3] > 0 ? 1 : 0;
+    //         
+    //         colorAnalyzer.NearGreyThreshold = (int)nearGreyThreshold;
+    //         colorAnalyzer.ColorDominanceThreshold = (int)colorDominanceThreshold;
+    //         colorAnalyzer.PercentagePixelCountThreshold = percentagePixelCountThreshold;
+    //         colorAnalyzer.useDominanceMetricWithoutThreshold = useDominanceMetricWithoutThreshold;
+    //     }
+    // }
 }
