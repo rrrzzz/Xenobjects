@@ -10,6 +10,8 @@ namespace Code
         public float movingDurationMax = 4;   
         public float tornadoMinDistance = .7f;
         public float tornadoMaxDistance = 3f;
+        public ParticleSystem tornadoPs;
+        public float tornadoFadeDelay = 12;
 
         public Transform tornadoTransform;
         public ParticleSystem gasPs;
@@ -23,7 +25,9 @@ namespace Code
         private Vector3 _tornadoFinalScale = new Vector3(16.91379f, 16.91379f, 16.91379f);
         
         private Material _gasMat;
+        private Material _tornadoMat;
         private static readonly int GasColorId = Shader.PropertyToID("_Color");
+        private static readonly int TintColorId = Shader.PropertyToID("_TintColor");
 
         private readonly Dictionary<string, Vector2> _psColorValues = new Dictionary<string, Vector2>
         {
@@ -47,6 +51,7 @@ namespace Code
             base.Initialize(dataProvider);
             _startTime = Time.realtimeSinceStartup;
             _gasMat = gasPs.GetComponent<Renderer>().material;
+            _tornadoMat = tornadoPs.GetComponent<Renderer>().material;
             _particleSystems = transform.parent.GetComponentsInChildren<ParticleSystem>();
         }
 
@@ -57,12 +62,26 @@ namespace Code
                 return;
             }
 
-            if (!_delayPassed && Time.realtimeSinceStartup - _startTime < startDelay)
+            var timePassed = Time.realtimeSinceStartup - _startTime;
+            if (!_delayPassed && timePassed < startDelay)
             {
                 return;
             }
 
             _delayPassed = true;
+            
+            if (timePassed > tornadoFadeDelay)
+            {
+                var tornadoFadingTime = timePassed - tornadoFadeDelay; 
+                if (tornadoFadingTime <= 2)
+                {
+                    var t = tornadoFadingTime / 2;
+                    var alpha = Mathf.Lerp(1, 0.04f, t);
+                    var currentCol = _tornadoMat.GetColor(TintColorId);
+                    currentCol.a = alpha;
+                    _tornadoMat.SetColor(TintColorId, currentCol);
+                }
+            }
 
             UpdateTornadoTransform();
             if (!_isChangingAlpha)

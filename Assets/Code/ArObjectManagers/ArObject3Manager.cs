@@ -22,7 +22,6 @@ public class ArObject3Manager : ArObjectManagerBase
     public ParticleSystem[] ribbons;
     public ParticleSystem objectCoreGlowPs;
     public ParticleSystem snowPs1;
-    public ParticleSystem snowPs2;
     public ParticleSystem smokePs;
 
     public float ribbonStartSizeMax = .1f;
@@ -71,7 +70,6 @@ public class ArObject3Manager : ArObjectManagerBase
 
         UpdateSmokeAndCoreGlow();
         UpdateSnowByDistance(snowPs1);
-        UpdateSnowByDistance(snowPs2);
 
         if (!_delayPassed && Time.realtimeSinceStartup - _startTime > rotationDelay)
         {
