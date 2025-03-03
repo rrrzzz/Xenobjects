@@ -62,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 824825885874895362, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: m_Name
-      value: ArObjec1tManager
+      value: ArObjectManager
       objectReference: {fileID: 0}
     - target: {fileID: 920089813895567334, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: m_LocalPosition.x
@@ -114,7 +114,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6581831783090701721, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6722823148156107529, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: tornadoTransform

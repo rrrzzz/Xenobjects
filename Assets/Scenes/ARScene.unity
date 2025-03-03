@@ -156,7 +156,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -66.81247, y: 118.3996}
+  m_AnchoredPosition: {x: -0.0071411, y: 121}
   m_SizeDelta: {x: 946.3743, y: 417.2507}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &188514363
@@ -256,61 +256,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 188514361}
   m_CullTransparentMesh: 1
---- !u!1 &205473223
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 205473225}
-  - component: {fileID: 205473224}
-  m_Layer: 0
-  m_Name: TrackingManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &205473224
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205473223}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98f7c57765cef86469a57425becad662, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  imageRecognizedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  imagePosRotTxt: {fileID: 188514363}
-  trackedImgManager: {fileID: 0}
-  arObject1Prefab: {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
-  arObject2Prefab: {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
-  arObject3Prefab: {fileID: 2546783936141597339, guid: 2aa2ae28444b3f44fb956827f8541bd2, type: 3}
-  isSpawned: 0
-  spawnedContent: {fileID: 0}
-  dataProvider: {fileID: 1593050916}
---- !u!4 &205473225
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205473223}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.065159, y: 0.50878185, z: -12.56745}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &211514649
 GameObject:
   m_ObjectHideFlags: 0
@@ -1104,12 +1049,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b592c3cacd256f4493f561e36fddfe3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nearGreyThreshold: 21
+  colorDominanceThreshold: 21
+  percentagePixelCountThreshold: 30
+  dominantPercentageCrossCenteredCheck: 5
+  crossHorVertErrorMargin: 4
   cameraManager: {fileID: 525988485}
   colorText: {fileID: 1385542226}
-  regionSize: 30
+  regionSizeWidthPercentage: 0.5
   dominantColor: {r: 0, g: 0, b: 0, a: 0}
   isProcessingImage: 0
   isProcessingSuccess: 0
+  isRewritingColorOnCrossCheck: 1
 --- !u!4 &621269692
 Transform:
   m_ObjectHideFlags: 0
@@ -1506,7 +1457,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 10, y: -300.53}
+  m_AnchoredPosition: {x: -267, y: -300.53}
   m_SizeDelta: {x: 319.6875, y: 86.7217}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &813847034
@@ -1939,6 +1890,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3284a08367152e14d869657a4d62ae57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  arCeo: {fileID: 1588800223}
   button: {fileID: 1571486780}
   colorAnalyzer: {fileID: 621269691}
   isAutoModeOn: 0
@@ -2290,8 +2242,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -73.90393, y: 483.1266}
-  m_SizeDelta: {x: 932.1921, y: 292.6269}
+  m_AnchoredPosition: {x: 10, y: 0.000048161}
+  m_SizeDelta: {x: 996.9458, y: 2281.8076}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1385542226
 MonoBehaviour:
@@ -2617,7 +2569,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1571486779
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2828,27 +2780,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 476309c306da42199fe56b46ee7c97ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  captureButton: {fileID: 1571486780}
+  button: {fileID: 1571486780}
+  checkTimeoutAfterSpawn: 3
   anchorManager: {fileID: 650971209}
   raycastManager: {fileID: 650971208}
+  dataProvider: {fileID: 1593050916}
   crosshair: {fileID: 1072957274}
   planeScanTip: {fileID: 1189028117}
   prefab: {fileID: 0}
   prefabs:
   - {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
-  - {fileID: 2325789164882437802, guid: 4683664be37c23d41a348245ef94b2b9, type: 3}
+  - {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
   - {fileID: 2546783936141597339, guid: 2aa2ae28444b3f44fb956827f8541bd2, type: 3}
   inputFloats: {fileID: 813847034}
   crosshairAimingThreshold: 2
   horizontalThreshold: 10
   horizontalCheckInterval: 1
+  crossCheckInterval: 0.5
   anchorRotationText: {fileID: 188514363}
-  verticalLine: {fileID: 1275597055}
-  horizontalLine: {fileID: 1570812781}
+  crosshairVerticalLine: {fileID: 1275597055}
+  crosshairHorizontalLine: {fileID: 1570812781}
   verticalLineImage: {fileID: 1275597056}
   horizontalLineImage: {fileID: 1570812782}
   colorAnalyzer: {fileID: 621269691}
-  isObjectSpawned: 0
+  firstObjectColor: {r: 1, g: 0, b: 0, a: 1}
+  secondObjectColor: {r: 0, g: 1, b: 0, a: 1}
+  thirdObjectColor: {r: 0, g: 0, b: 1, a: 1}
 --- !u!4 &1588800224
 Transform:
   m_ObjectHideFlags: 0
@@ -2880,7 +2837,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1593050916
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2888,7 +2845,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1593050915}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 177d689f2bc44ed9893ae0e564520aed, type: 3}
   m_Name: 
@@ -3591,7 +3548,6 @@ SceneRoots:
   - {fileID: 1075000276}
   - {fileID: 650971212}
   - {fileID: 1588800224}
-  - {fileID: 205473225}
   - {fileID: 588159600}
   - {fileID: 1593050917}
   - {fileID: 2137522385}

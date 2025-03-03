@@ -74,7 +74,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2783382378726204193, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3303145358705166812, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: nodes.Array.data[0].scale.x

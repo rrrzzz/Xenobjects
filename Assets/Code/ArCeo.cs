@@ -2,35 +2,40 @@ using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
-namespace Code.CrosshairTests
+namespace Code
 {
     public class ArCeo : MonoBehaviour
     {
-        private const float CheckTimeoutAfterSpawn = 10;
-        
-        // public Button captureButton;
+        public Button button;
+        public float checkTimeoutAfterSpawn = 10;
         public ARAnchorManager anchorManager;
         public ARRaycastManager raycastManager;
+        public ARMovementInteractionDataProvider dataProvider;
         public GameObject crosshair;
         public GameObject planeScanTip;
-        public GameObject prefab;
+        public GameObject chosenPrefab;
         public GameObject[] prefabs;
         public TMP_InputField inputFloats;
         public float crosshairAimingThreshold = 2;
         public float horizontalThreshold = 10;
         public float horizontalCheckInterval = 1;
+        public float crossCheckInterval = .5f;
         public TMP_Text anchorRotationText;
-        public RectTransform verticalLine;
-        public RectTransform horizontalLine;
+        [FormerlySerializedAs("verticalLine")] public RectTransform crosshairVerticalLine;
+        [FormerlySerializedAs("horizontalLine")] public RectTransform crosshairHorizontalLine;
         public Image verticalLineImage;
         public Image horizontalLineImage;
         public ARColorAnalyzer colorAnalyzer;
-        [HideInInspector] public bool isObjectSpawned;
-        
+        public Color firstObjectColor = Color.red;
+        public Color secondObjectColor = Color.green;
+        public Color thirdObjectColor = Color.blue;
+
+        private float _crossCheckStartTime;
         private Vector3 _verticalLineRotation = Vector3.zero;
         private Vector3 _horizontalLineRotation = Vector3.zero;
         private bool _planeWasAdded;
@@ -47,35 +52,32 @@ namespace Code.CrosshairTests
         private bool _isTargetFound;
         private List<ARRaycastHit> _planeHits = new List<ARRaycastHit>();
         private int _currentTestingFunctionalityIdx;
-        private bool _hasTouchedScreen;
-
+        private bool _hasCheckedCross;
+        private bool _isSpawned;
+        private bool _isManualMode;
+        
         private void Start()
         {
-            // captureButton.onClick.AddListener(() =>
-            // {
-            //     if (colorAnalyzer.isProcessingImage)
-            //     {
-            //         return;
-            //     }
-            //     colorAnalyzer.TryCaptureImage();
-            // });
-            
             _phoneTransform = Camera.main.transform;
             Input.gyro.enabled = true;
             float centerX = Screen.width / 2f;
             float centerY = Screen.height / 2f;
         
             var lineLength = Mathf.Min(centerX, centerY);
-            var lineWidth = verticalLine.rect.width;
+            var lineWidth = crosshairVerticalLine.rect.width;
             
-            horizontalLine.sizeDelta = new Vector2(lineLength, lineWidth);
-            verticalLine.sizeDelta = new Vector2(lineWidth, lineLength);
+            crosshairHorizontalLine.sizeDelta = new Vector2(lineLength, lineWidth);
+            crosshairVerticalLine.sizeDelta = new Vector2(lineWidth, lineLength);
             
             _screenCenter = new Vector2(centerX, centerY);
-            _horizontalCheckStartTime = Time.realtimeSinceStartup;
-            
+            _horizontalCheckStartTime = _crossCheckStartTime = Time.realtimeSinceStartup;
+            button.onClick.AddListener(() =>
+            {
+                _isManualMode = !_isManualMode;
+            });
         }
 
+        //TODO remove crosshair if phone is not horizontal \ doesn't see color
         private void Update()
         {
             if (ARSession.state != ARSessionState.SessionTracking)
@@ -120,6 +122,10 @@ namespace Code.CrosshairTests
                     _checkingIfSeeingTarget = false;
                     _isTargetFound = true;
                 }
+                else
+                {
+                    crosshair.SetActive(false);
+                }
                 
                 colorAnalyzer.isProcessingSuccess = false;
                 _checkingIfSeeingTarget = false;
@@ -130,7 +136,8 @@ namespace Code.CrosshairTests
                 _checkingIfSeeingTarget = false;
                 return;
             }
-
+            
+            //TODO: Maybe disable plane creation when plane is detected and object is created
             if (_isTargetFound && !_planeWasAdded)
             {
                 raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
@@ -162,26 +169,36 @@ namespace Code.CrosshairTests
             }
 
             anchorRotationText.text = "Phone aligned, waiting for tap";
-            if (Input.touchCount == 1)
+            
+            if (_isManualMode)
             {
-                var touch = Input.GetTouch(0);
-                if (touch.phase != TouchPhase.Began) 
+                if (Input.touchCount == 1)
+                {
+                    _hasCheckedCross = true;
+                    colorAnalyzer.TryDetermineCenteredAtCross();
                     return;
-                _hasTouchedScreen = true;
-                colorAnalyzer.TryCaptureImage();
+                }
+            }
+            
+            if (!_isManualMode && Time.realtimeSinceStartup - _crossCheckStartTime >= crossCheckInterval)
+            {
+                _crossCheckStartTime = Time.realtimeSinceStartup;
+                _hasCheckedCross = true;
+                colorAnalyzer.TryDetermineCenteredAtCross();
                 return;
             }
             
-            if (!_hasTouchedScreen)
+            if (!_hasCheckedCross)
             {
                 return;
             }
 
             if (colorAnalyzer.dominantColor == Color.clear)
             {
+                _isTargetFound = false;
                 anchorRotationText.text = "No color detected when phone aligned with crosshair, probably moved it away.";
                 colorAnalyzer.isProcessingSuccess = false;
-                _hasTouchedScreen = false;
+                _hasCheckedCross = false;
                 return;
             }
             
@@ -198,19 +215,168 @@ namespace Code.CrosshairTests
                     CreateAnchor(_planeHits[0]);
                 }
                 
-                _horizontalCheckStartTime = Time.realtimeSinceStartup + CheckTimeoutAfterSpawn;
+                _horizontalCheckStartTime = Time.realtimeSinceStartup + checkTimeoutAfterSpawn;
                 _isTargetFound = false;
-                anchorRotationText.text = $"Waiting for {CheckTimeoutAfterSpawn}s check timeout to expire";
             }
             
-            _planeWasAdded = false;
-            _hasTouchedScreen = false;
+            colorAnalyzer.dominantColor = Color.clear;
+            _planeWasAdded = false;  
+            _hasCheckedCross = false;
+        }
+        
+        private void SetPrefabBasedOnColor(Color targetColor)
+        {
+            if (targetColor == firstObjectColor)
+            {
+                chosenPrefab = prefabs[0];
+            }
+            else if (targetColor == secondObjectColor)
+            {
+                chosenPrefab = prefabs[1];
+            }
+            else if (targetColor == thirdObjectColor)
+            {
+                chosenPrefab = prefabs[2];
+            }
         }
 
+        private bool CheckPhoneAlignedWithCrosshair()
+        {
+            Quaternion rotation = Input.gyro.attitude;
+            Vector2 angles = NormalizeRotationAngles(rotation.eulerAngles);
+            anchorRotationText.text = angles.ToString();
+
+            var xError = Mathf.Abs(angles.x);
+            var yError = Mathf.Abs(angles.y);
+
+            var currentAimingThreshold = crosshairAimingThreshold;
+
+            // if (TryGetParamValue(inputFloats, out var val))
+            // {
+            //     currentAimingThreshold = val[1] == 0 ? crosshairAimingThreshold : val[1];
+            // }
+            //
+            var isXCaptured = xError < currentAimingThreshold;
+            var isYCaptured = yError < currentAimingThreshold;
+            
+            _horizontalLineRotation.z = isXCaptured ? 0: -angles.x; 
+            _verticalLineRotation.z = isYCaptured ? 0: -angles.y;
+
+            horizontalLineImage.color = isXCaptured ? _targetCapturedColor : _defCrosshairColor;
+            verticalLineImage.color = isYCaptured ? _targetCapturedColor : _defCrosshairColor;
+
+            crosshairHorizontalLine.rotation = Quaternion.Euler(_horizontalLineRotation);
+            crosshairVerticalLine.rotation = Quaternion.Euler(_verticalLineRotation);
+            
+            return isXCaptured && isYCaptured;
+        }
+
+        private bool CheckPhoneApproximatelyHorizontal()
+        {
+            Quaternion rotation = Input.gyro.attitude;
+            Vector2 angles = NormalizeRotationAngles(rotation.eulerAngles);
+               
+            anchorRotationText.text = angles.ToString();
+
+            var xError = Mathf.Abs(angles.x);
+            var yError = Mathf.Abs(angles.y);
+
+            var currentThreshold = horizontalThreshold;
+
+            // if (TryGetParamValue(inputFloats, out var val))
+            // {
+            //     currentThreshold = val[1] == 0 ? horizontalThreshold : val[1];
+            // }
+
+            var isXHorizontal = xError < currentThreshold;
+            var isYHorizontal = yError < currentThreshold;
+            
+            return isXHorizontal && isYHorizontal;
+        }
+        
+        void CreateAnchor(ARRaycastHit hit)
+        {
+            if (anchorManager.descriptor.supportsTrackableAttachments && hit.trackable is ARPlane plane)
+            {
+                AttachAnchorToTrackable(plane, hit);
+            }
+        }
+        
+        private Vector3 NormalizeRotationAngles(Vector3 rotation)
+        {
+            if (rotation.x > 180)
+                rotation.x -= 360;
+
+            if (rotation.y > 180)
+                rotation.y -= 360;
+            
+            if (rotation.z > 180)
+                rotation.z -= 360;
+            
+            return rotation * -1;
+        }
+        
+        void AttachAnchorToTrackable(ARPlane plane, ARRaycastHit hit)
+        {
+            if (_currentAnchor)
+            {
+                DestroyImmediate(_currentAnchor.gameObject);
+            }
+            _currentAnchor = anchorManager.AttachAnchor(plane, hit.pose);
+            
+            Vector3 offset = _phoneTransform.up * 0.3f;
+            
+            Quaternion rotation = chosenPrefab.transform.rotation;
+            // if (TryGetParamValue(inputFloats, out var val))
+            // {
+            //     offset += _currentAnchor.transform.up * val[0];
+            //     if (val[1] != 0)
+            //     {
+            //         rotation = Quaternion.Euler(0, val[1], 0);
+            //     }
+            // }
+            
+            if (_currentPrefab)
+            {
+                DestroyImmediate(_currentPrefab);
+            }
+
+            _currentPrefab = Instantiate(chosenPrefab, _currentAnchor.transform.position + offset, rotation,
+                _currentAnchor.transform);
+            
+            _currentPrefab.transform.forward = _phoneTransform.up;
+            _currentPrefab.transform.Rotate(_currentAnchor.transform.up, 180);
+            
+            dataProvider.SetArObjectTransform(_currentPrefab.transform);
+        }
+
+        public bool TryGetParamValue(TMP_InputField paramField, out float[] val)
+        {
+            val = new float[]{0,0,0,0,0};
+
+            if (paramField)
+            {
+                // Split the string by commas
+                string[] parts = paramField.text.Split(',');
+                if (string.IsNullOrEmpty(parts[0]))
+                {
+                    return false;
+                }
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    val[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
+                }
+                
+                return true;
+            }
+            
+            return false;
+        }
+        
         private void TestFunctionalityById()
         {
             var previousTestingFunctionalityIdx = _currentTestingFunctionalityIdx;
-            _currentTestingFunctionalityIdx = TryGetParamValue(inputFloats, out var val) ? (int)val[0] : 0;
+            // _currentTestingFunctionalityIdx = TryGetParamValue(inputFloats, out var val) ? (int)val[0] : 0;
             
             switch (_currentTestingFunctionalityIdx)
             {
@@ -287,168 +453,5 @@ namespace Code.CrosshairTests
                     return;
             }
         }
-
-        private void SetPrefabBasedOnColor(Color targetColor)
-        {
-            if (targetColor == Color.red)
-            {
-                prefab = prefabs[0];
-            }
-            else if (targetColor == Color.green)
-            {
-                prefab = prefabs[1];
-            }
-            else if (targetColor == Color.blue)
-            {
-                prefab = prefabs[2];
-            }
-        }
-
-        private bool CheckPhoneAlignedWithCrosshair()
-        {
-            Quaternion rotation = Input.gyro.attitude;
-            Vector2 angles = NormalizeRotationAngles(rotation.eulerAngles);
-            anchorRotationText.text = angles.ToString();
-
-            var xError = Mathf.Abs(angles.x);
-            var yError = Mathf.Abs(angles.y);
-
-            var currentAimingThreshold = crosshairAimingThreshold;
-
-            if (TryGetParamValue(inputFloats, out var val))
-            {
-                currentAimingThreshold = val[1] == 0 ? crosshairAimingThreshold : val[1];
-            }
-            
-            var isXCaptured = xError < currentAimingThreshold;
-            var isYCaptured = yError < currentAimingThreshold;
-            
-            _horizontalLineRotation.z = isXCaptured ? 0: -angles.x; 
-            _verticalLineRotation.z = isYCaptured ? 0: -angles.y;
-
-            horizontalLineImage.color = isXCaptured ? _targetCapturedColor : _defCrosshairColor;
-            verticalLineImage.color = isYCaptured ? _targetCapturedColor : _defCrosshairColor;
-
-            horizontalLine.rotation = Quaternion.Euler(_horizontalLineRotation);
-            verticalLine.rotation = Quaternion.Euler(_verticalLineRotation);
-            
-            return isXCaptured && isYCaptured;
-        }
-
-        private bool CheckPhoneApproximatelyHorizontal()
-        {
-            Quaternion rotation = Input.gyro.attitude;
-            Vector2 angles = NormalizeRotationAngles(rotation.eulerAngles);
-               
-            anchorRotationText.text = angles.ToString();
-
-            var xError = Mathf.Abs(angles.x);
-            var yError = Mathf.Abs(angles.y);
-
-            var currentThreshold = horizontalThreshold;
-
-            if (TryGetParamValue(inputFloats, out var val))
-            {
-                currentThreshold = val[1] == 0 ? horizontalThreshold : val[1];
-            }
-
-            var isXHorizontal = xError < currentThreshold;
-            var isYHorizontal = yError < currentThreshold;
-            
-            return isXHorizontal && isYHorizontal;
-        }
-        
-        void CreateAnchor(ARRaycastHit hit)
-        {
-            if (anchorManager.descriptor.supportsTrackableAttachments && hit.trackable is ARPlane plane)
-            {
-                AttachAnchorToTrackable(plane, hit);
-            }
-        }
-        
-        private Vector3 NormalizeRotationAngles(Vector3 rotation)
-        {
-            if (rotation.x > 180)
-                rotation.x -= 360;
-
-            if (rotation.y > 180)
-                rotation.y -= 360;
-            
-            if (rotation.z > 180)
-                rotation.z -= 360;
-            
-            return rotation * -1;
-        }
-        
-        void AttachAnchorToTrackable(ARPlane plane, ARRaycastHit hit)
-        {
-            if (_currentAnchor)
-            {
-                DestroyImmediate(_currentAnchor.gameObject);
-            }
-            _currentAnchor = anchorManager.AttachAnchor(plane, hit.pose);
-            
-            Vector3 offset = _phoneTransform.up * 0.3f;
-            
-            Quaternion rotation = prefab.transform.rotation;
-            if (TryGetParamValue(inputFloats, out var val))
-            {
-                offset += _currentAnchor.transform.up * val[0];
-                if (val[1] != 0)
-                {
-                    rotation = Quaternion.Euler(0, val[1], 0);
-                }
-            }
-            
-            if (_currentPrefab)
-            {
-                DestroyImmediate(_currentPrefab);
-            }
-
-            _currentPrefab = Instantiate(prefab, _currentAnchor.transform.position + offset, rotation,
-                _currentAnchor.transform);
-            
-            _currentPrefab.transform.forward = _phoneTransform.up;
-            _currentPrefab.transform.Rotate(_currentAnchor.transform.up, 180);
-        }
-
-        private bool TryGetParamValue(TMP_InputField paramField, out float[] val)
-        {
-            val = new float[]{0,0,0,0,0};
-
-            if (paramField)
-            {
-                // Split the string by commas
-                string[] parts = paramField.text.Split(',');
-                if (string.IsNullOrEmpty(parts[0]))
-                {
-                    return false;
-                }
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    val[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
-                }
-                
-                return true;
-            }
-            
-            return false;
-        }
     }
-    
-    // private void SetColorAnalyzerParams()
-    // {
-    //     if (TryGetParamValue(inputFloats, out var val2))
-    //     {
-    //         var nearGreyThreshold = val2[0];
-    //         var colorDominanceThreshold = val2[1];
-    //         var percentagePixelCountThreshold = val2[2];
-    //         var useDominanceMetricWithoutThreshold = val2[3] > 0 ? 1 : 0;
-    //         
-    //         colorAnalyzer.NearGreyThreshold = (int)nearGreyThreshold;
-    //         colorAnalyzer.ColorDominanceThreshold = (int)colorDominanceThreshold;
-    //         colorAnalyzer.PercentagePixelCountThreshold = percentagePixelCountThreshold;
-    //         colorAnalyzer.useDominanceMetricWithoutThreshold = useDominanceMetricWithoutThreshold;
-    //     }
-    // }
 }
