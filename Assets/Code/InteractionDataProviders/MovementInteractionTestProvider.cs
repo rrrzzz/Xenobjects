@@ -6,12 +6,6 @@ namespace Code
     {
         public float camRotationInputSpeed = 40;
 
-        protected override void Awake()
-        {
-            base.Awake();
-            SetArObjectTransform(arObjectTr);
-        }
-
         protected override void UpdatePhoneTiltAngle()
         {
             var camRot = camTr.rotation.eulerAngles;
