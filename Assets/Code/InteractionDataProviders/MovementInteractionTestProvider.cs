@@ -5,6 +5,18 @@ namespace Code
     public class MovementInteractionTestProvider : MovementInteractionProviderBase
     {
         public float camRotationInputSpeed = 40;
+        public bool addTransformOnAwake;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (!addTransformOnAwake)
+            {
+                return;
+            }
+            
+            SetArObjectTransform(arObjectTr);
+        }
 
         protected override void UpdatePhoneTiltAngle()
         {

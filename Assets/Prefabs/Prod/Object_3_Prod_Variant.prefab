@@ -33,6 +33,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1921121210832336424}
     - target: {fileID: 5267096974128416380, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
+      propertyPath: rotationDelay
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5267096974128416380, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
       propertyPath: rotationScript
       value: 
       objectReference: {fileID: 7908385974231608598}
@@ -58,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5267096974128416380, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
       propertyPath: idleDurationThreshold
-      value: 5.5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5267096974128416380, guid: 5dd6ca3c651663344bc81fa4f2eb198e, type: 3}
       propertyPath: ribbons.Array.data[0]
@@ -208,7 +212,7 @@ MonoBehaviour:
   heightOffset: 0.14
   radius: 0.3
   isRotating: 0
-  angularSpeed: 1
+  angularSpeed: 1.5
   targetAngleThreshold: 0.01
 --- !u!198 &5994316700458912526 stripped
 ParticleSystem:

@@ -148,7 +148,7 @@ namespace SplineMesh
                 }
                 _isVanishing = true;
             }
-        }
+        } 
         
         [Button]
         private void SetAllNodeControlsToMirrored()

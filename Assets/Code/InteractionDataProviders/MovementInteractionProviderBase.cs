@@ -51,7 +51,6 @@ namespace Code
             _camPrevPosition = camTr.position;
         }
         
-        
         private void Update()
         { 
             UpdateMovementStatus();
@@ -142,6 +141,11 @@ namespace Code
             {
                 objPosTxt.text = "obj pos: " +  arObjectTr.position;
                 distanceToObjTxt.text = "Dist to obj: " + DistanceToArObjectRaw;
+            }
+            else if (isDebugInfoShown)
+            {
+                // Debug.Log("obj pos: " +  arObjectTr.position);
+                Debug.Log("Dist to obj: " + DistanceToArObjectRaw);
             }
             
             DistanceToArObject01 = 1 - Mathf.InverseLerp(minDistance, maxDistance, DistanceToArObjectRaw);

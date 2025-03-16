@@ -3,6 +3,7 @@ using Code;
 using Code.Utils;
 using EasyButtons;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ArObject3Manager : ArObjectManagerBase
 {
@@ -10,38 +11,42 @@ public class ArObject3Manager : ArObjectManagerBase
     private const float RibbonLifetimeDef = 1;
     private const float ColorFromWhiteThreshold = 310f;
     private const float ColorToWhiteHue = 260f;
-    private const float SnowMinParticles = 50;
-    private const float SnowMaxParticles = 10000;
-    private const float SnowDefLifetime = 0.1f;
-    private const float SnowMinLifetime = 0.7f;
-    private const float SnowMaxLifetime = 2;
-    private const float SnowDefStartSize = 0.051487f;
-    private const float SnowMinStartSize = 1.0297f;
-    private const float SnowMaxStartSize = 2f;
+    private const float SmokeMinParticles = 50;
+    private const float SmokeMaxParticles = 10000;
+    private const float SmokeDefLifetime = 0.1f;
+    private const float SmokeMinLifetime = 0.7f;
+    private const float SmokeMaxLifetime = 2;
+    private const float SmokeDefStartSize = 0.051487f;
+    private const float SmokeMinStartSize = 1.0297f;
+    private const float SmokeMaxStartSize = 2f;
     
     public ParticleSystem[] ribbons;
     public ParticleSystem objectCoreGlowPs;
-    public ParticleSystem snowPs1;
+    [FormerlySerializedAs("smokePs1")] [FormerlySerializedAs("snowPs1")] 
     public ParticleSystem smokePs;
+    [FormerlySerializedAs("smokePs")] 
+    public ParticleSystem coloredFlamePs;
 
     public float ribbonStartSizeMax = .1f;
     public float ribbonLifetimeMax = 1;
-    public float snowDistanceMin = 0.7f;
-    public float snowDistanceMax = 2.5f;
+    [FormerlySerializedAs("snowDistanceMin")] 
+    public float smokeDistanceMin = 0.7f;
+    [FormerlySerializedAs("snowDistanceMax")] 
+    public float smokeDistanceMax = 2.5f;
     public float oscillationSpeed = 1;
     public float idleDurationThreshold = 8;
     public float rotationDelay = 4;
+    public float rotationRadius = 1;
     
     public RotateAroundObject rotationScript;
 
     private float _startTime;
-    private bool _delayPassed;
-    private Material _smokeMat;
+    private Material _coloredFlameMat;
     
     private readonly float _glowColorHMin = 360;
     private readonly float _glowColorHMax = 179;
     private readonly int _smokeTintColor = Shader.PropertyToID("_TintColor");
-    private float _smokeAlpha;
+    private float _coloredFlameAlpha;
     private readonly Stopwatch _oscillationTimer = new Stopwatch();
     private bool _isOscillating;
     private bool _isEndingOscillation;
@@ -51,9 +56,10 @@ public class ArObject3Manager : ArObjectManagerBase
         base.Initialize(dataProvider);
         DataProvider.SingleTouchEvent.AddListener(OnSingleTouch);
         rotationScript.Init(transform.parent);
+        rotationScript.radius = rotationRadius;
         _startTime = Time.realtimeSinceStartup;
-        _smokeMat = smokePs.GetComponent<Renderer>().material;
-        _smokeAlpha = _smokeMat.GetColor(_smokeTintColor).a;
+        _coloredFlameMat = coloredFlamePs.GetComponent<Renderer>().material;
+        _coloredFlameAlpha = _coloredFlameMat.GetColor(_smokeTintColor).a;
     }
 
     private void Update()
@@ -68,28 +74,27 @@ public class ArObject3Manager : ArObjectManagerBase
             SetOscillatingEffect();
         }
 
-        UpdateSmokeAndCoreGlow();
-        UpdateSnowByDistance(snowPs1);
+        UpdateColoredFlameAndCoreGlow();
+        UpdateSmokeByDistance(smokePs);
 
-        if (!_delayPassed && Time.realtimeSinceStartup - _startTime > rotationDelay)
+        if (Time.realtimeSinceStartup - _startTime <= rotationDelay)
         {
             return;
         }
-
-        _delayPassed = true;
         
-        if (Time.realtimeSinceStartup - _startTime > rotationDelay && DataProvider.IdleDuration > idleDurationThreshold)
+        if (DataProvider.IdleDuration > idleDurationThreshold)
         {
             rotationScript.RotateToTargetAngle(DataProvider.camTr.position);
         }
 
         //TODO remove when set
-        if (!DataProvider.TryGetParamValue(out var transformData)) return;
-        if (transformData[0] == 0) return;
-        rotationScript.radius = transformData[0];
+        if (DataProvider.TryGetParamValue(out var transformData) && transformData[0] != 0)
+        {
+            rotationScript.radius = transformData[0];
+        }
     }
 
-    private void UpdateSmokeAndCoreGlow()
+    private void UpdateColoredFlameAndCoreGlow()
     {
         var currentColor = Mathf.Lerp(_glowColorHMin, _glowColorHMax, DataProvider.TiltZ01);
         Color rgb;
@@ -116,9 +121,9 @@ public class ArObject3Manager : ArObjectManagerBase
         var main = objectCoreGlowPs.main;
         main.startColor = 
             new ParticleSystem.MinMaxGradient(rgb);
-        rgb.a = _smokeAlpha;
+        rgb.a = _coloredFlameAlpha;
         
-        _smokeMat.SetColor(_smokeTintColor, rgb);
+        _coloredFlameMat.SetColor(_smokeTintColor, rgb);
     }
     
     private void OnSingleTouch()
@@ -152,16 +157,16 @@ public class ArObject3Manager : ArObjectManagerBase
         }
     }
     
-    private void UpdateSnowByDistance(ParticleSystem snowPs)
+    private void UpdateSmokeByDistance(ParticleSystem snowPs)
     {
-        var t = Mathf.InverseLerp(snowDistanceMin, snowDistanceMax, DataProvider.DistanceToArObjectRaw);
-        var lifetime = Mathf.Lerp(SnowMinLifetime, SnowMaxLifetime, t);
-        var particleCount = Mathf.Lerp(SnowMinParticles, SnowMaxParticles, t);
-        var size = Mathf.Lerp(SnowMinStartSize, SnowMaxStartSize, t);
+        var t = Mathf.InverseLerp(smokeDistanceMin, smokeDistanceMax, DataProvider.DistanceToArObjectRaw);
+        var lifetime = Mathf.Lerp(SmokeMinLifetime, SmokeMaxLifetime, t);
+        var particleCount = Mathf.Lerp(SmokeMinParticles, SmokeMaxParticles, t);
+        var size = Mathf.Lerp(SmokeMinStartSize, SmokeMaxStartSize, t);
         var main = snowPs.main;
            
-        var startSize = new ParticleSystem.MinMaxCurve(SnowDefStartSize, size);
-        var lifetimeCurve = new ParticleSystem.MinMaxCurve(SnowDefLifetime, lifetime);
+        var startSize = new ParticleSystem.MinMaxCurve(SmokeDefStartSize, size);
+        var lifetimeCurve = new ParticleSystem.MinMaxCurve(SmokeDefLifetime, lifetime);
         main.startSize = startSize;
         main.startLifetime = lifetimeCurve;
         main.maxParticles = Mathf.RoundToInt(particleCount);

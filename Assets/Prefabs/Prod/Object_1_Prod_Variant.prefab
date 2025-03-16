@@ -266,7 +266,7 @@ PrefabInstance:
       objectReference: {fileID: 7634243396625813209}
     - target: {fileID: 4992484221644430409, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: idleDurationThreshold
-      value: 15
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4992484221644430409, guid: 9bd9fac807b25f34caa09f90cec3927d, type: 3}
       propertyPath: playerToPathNodeDistanceThreshold

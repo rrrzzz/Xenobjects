@@ -23,7 +23,7 @@ namespace Code
             var rotNormalized = NormalizeRotationAngles(camRot);
             var correctedRotY = rotNormalized.y - _puzzleEnteredYRotation;
 
-            if (isDebugInfoShown)
+            if (isDebugInfoShown && cameraPosRotTxt)
             {
                 cameraPosRotTxt.text = $"Phone pos: {camTr.position}\nPhone rot: {rotNormalized}\n";
             }
@@ -43,7 +43,7 @@ namespace Code
                 if (touch.phase != TouchPhase.Began) 
                     return;
                 
-                if (isDebugInfoShown)
+                if (isDebugInfoShown && titlTxt)
                 {
                     titlTxt.text = "Single Touch at: " + Time.time;
                 }
@@ -62,7 +62,7 @@ namespace Code
 
             if (!(timeDifference < TouchTimeThreshold)) return;
 
-            if (isDebugInfoShown)
+            if (isDebugInfoShown && titlTxt)
             {
                 titlTxt.text = "Double Touch at: " + Time.time;
             }
@@ -79,7 +79,7 @@ namespace Code
             if (deltaAcceleration.sqrMagnitude >= ShakeDetectionThreshold)
             {
                 ShakeEvent.Invoke();
-                if (isDebugInfoShown)
+                if (isDebugInfoShown && shakeText)
                 {
                     shakeText.text = "Shake event detected at time " + Time.time;
                 }

@@ -51,7 +51,7 @@ namespace Code
         private bool _isTouchToggleOn;
         private float _idleT;
         private float _movingT;
-        private bool _isArObjDisabled;
+        private bool _isPathDrawingActive;
         private Vector3 _orbScale;
         private bool _isMidPulsing;
         private bool _isFinishedPulsing;
@@ -59,7 +59,7 @@ namespace Code
         private bool _isPuzzleCompleted;
         private float _startPuzzleXRotation;
         private float _startPuzzleYRotation;
-        private bool _wasObjectActivated;
+        private bool _wasPathDrawingCompleted;
         private bool _isFirstHit;
         private static int _puzzleTintId = Shader.PropertyToID("_TintColor");
         private Material[] _puzzleSegmentMaterials;
@@ -68,8 +68,6 @@ namespace Code
         private readonly Color _puzzleSolvedColor = new Color(2.27060f, 1.69304f, 0.71760f, 1.00000f);
         private readonly Color _originalColor = new Color(2.31267f, 1.72440f, 0.73089f, 1.00000f);
         private readonly Color _fadedPuzzleColor = new Color(1.39772f, 1.04183f, 0.44173f, 1.00000f);
-
- 
 
         public override void Initialize(MovementInteractionProviderBase dataProvider)
         {
@@ -96,16 +94,17 @@ namespace Code
 
             SetFogByDistance();
 
-            if (!_wasObjectActivated && DataProvider.IdleDuration > idleDurationThreshold && !_isArObjDisabled)
-            {
-                _isArObjDisabled = true;
-                StartCoroutine(PathfindingCoroutine());
-            }
+            // if (!_wasPathDrawingCompleted && DataProvider.IdleDuration > idleDurationThreshold && !_isPathDrawingActive)
+            // {
+            //     _isPathDrawingActive = true;
+            //     StartCoroutine(PathfindingCoroutine());
+            // }
             
-            if (_isArObjDisabled)
+            if (_isPathDrawingActive)
             {
                 return;
             }
+            
             _orbGlow.SetEffectByNormalizedValue(DataProvider.DistanceToArObject01);   
             _distortion.SetEffectByNormalizedValue(DataProvider.TiltZ01);
             
@@ -120,6 +119,7 @@ namespace Code
             var t = Mathf.InverseLerp(FogDistanceMin, FogDistanceMax, DataProvider.DistanceToArObjectRaw);
             var fogValue = Mathf.Lerp(FogMin, FogMax, t);
             var main = fogParticleSystem.main;
+            // Debug.Log("Fog value: " + fogValue);
            
             var startSize = new ParticleSystem.MinMaxCurve(fogValue, fogValue);
             startSize.mode = ParticleSystemCurveMode.Constant;
@@ -177,8 +177,8 @@ namespace Code
             
             yield return StartCoroutine(BeginPuzzleLoop());
             
-            _isArObjDisabled = false;
-            _wasObjectActivated = true;
+            _isPathDrawingActive = false;
+            _wasPathDrawingCompleted = true;
         }
         
         [Button]
@@ -264,7 +264,7 @@ namespace Code
             _orbGlow.FadeColor(0, false);
             
             GrowOrb();
-            yield return new WaitForSeconds(orbScaleTime);
+            yield return new WaitForSeconds(orbScaleTime); 
             FadeInEffects();
         }
         
@@ -335,6 +335,7 @@ namespace Code
                 {
                     if (!_isMidPulsing)
                     {
+                        Debug.LogError("out of while loop");
                         _isFinishedPulsing = true;
                         break;
                     }
@@ -349,7 +350,7 @@ namespace Code
 
         private void PlaySwarm()
         {
-            if (_isArObjDisabled)
+            if (_isPathDrawingActive)
             {
                 return;
             }
@@ -419,7 +420,7 @@ namespace Code
         
         private void OnSingleTouch()
         {
-            if (_isArObjDisabled)
+            if (_isPathDrawingActive)
             {
                 return;
             }

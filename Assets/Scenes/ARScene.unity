@@ -2787,10 +2787,10 @@ MonoBehaviour:
   dataProvider: {fileID: 1593050916}
   crosshair: {fileID: 1072957274}
   planeScanTip: {fileID: 1189028117}
-  prefab: {fileID: 0}
+  chosenPrefab: {fileID: 0}
   prefabs:
-  - {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
   - {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
+  - {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
   - {fileID: 2546783936141597339, guid: 2aa2ae28444b3f44fb956827f8541bd2, type: 3}
   inputFloats: {fileID: 813847034}
   crosshairAimingThreshold: 2

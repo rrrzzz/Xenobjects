@@ -61,6 +61,8 @@ namespace Code
             {
                 return;
             }
+            
+            Debug.Log("isMoving: " + DataProvider.IsMoving);
 
             var timePassed = Time.realtimeSinceStartup - _startTime;
             if (!_delayPassed && timePassed < startDelay)
@@ -94,11 +96,10 @@ namespace Code
         private void UpdateTornadoTransform()
         {
             var t = Mathf.InverseLerp(tornadoMinDistance, tornadoMaxDistance, DataProvider.DistanceToArObjectRaw);
-            
-            if (t > 0.2f)
+            if (t > 0.2f) // distance to object is large enough
             {
                 _isChangingAlpha = false;
-                UpdateColorParticleSystems(1, true);
+                UpdateAlphaColorParticleSystems(1, true);
             }
             else
             {
@@ -121,14 +122,15 @@ namespace Code
             //     return;
             // }
             //
+            
             var t = DataProvider.IsMoving ? Mathf.InverseLerp(0, movingDurationMax, DataProvider.MovementDuration) : 
                 Mathf.InverseLerp(0, idleDurationMax, DataProvider.IdleDuration);
-
-            UpdateColorParticleSystems(t, DataProvider.IsMoving);
-            UpdateMaterialParticleSystems(t, DataProvider.IsMoving);
+            
+            UpdateAlphaColorParticleSystems(t, DataProvider.IsMoving);
+            UpdateMaterialAlphaParticleSystems(t, DataProvider.IsMoving);
         }
 
-        private void UpdateColorParticleSystems(float t, bool isMoving)
+        private void UpdateAlphaColorParticleSystems(float t, bool isMoving)
         {
             foreach (var ps in _particleSystems)
             {
@@ -146,7 +148,7 @@ namespace Code
             }
         }
 
-        private void UpdateMaterialParticleSystems(float t, bool isMoving)
+        private void UpdateMaterialAlphaParticleSystems(float t, bool isMoving)
         {
             // var tornadoAlpha = isMoving ? Mathf.Lerp(TornadoStart, TornadoMin, t) : Mathf.Lerp(TornadoStart, TornadoMax, t);
             //
