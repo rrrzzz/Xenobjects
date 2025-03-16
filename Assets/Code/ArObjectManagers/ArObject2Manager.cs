@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace Code
@@ -12,6 +13,9 @@ namespace Code
         public float tornadoMaxDistance = 3f;
         public ParticleSystem tornadoPs;
         public float tornadoFadeDelay = 12;
+        public Transform bloodSystemA;
+        public Transform bloodSystemC;
+        public float bloodRotationAngles = 100;
 
         public Transform tornadoTransform;
         public ParticleSystem gasPs;
@@ -42,17 +46,42 @@ namespace Code
             { "Particle System_A", new Vector2(70, 0) },
             { "Particle System_C", new Vector2(70, 0) }
         };
-
+        
+        private readonly Vector3 _bloodAInitRot = new Vector3(-9.379f, 56.28f, -240.005f);
+        private readonly Vector3 _bloodCInitRot = new Vector3(-60.69f, 422.773f, 124.218f);
+        private Tweener _bloodTweenA;
+        private Tweener _bloodTweenC;
+         
         private ParticleSystem[] _particleSystems;
         private bool _isChangingAlpha = true;
+        public bool isBloodRotating;
 
         public override void Initialize(MovementInteractionProviderBase dataProvider)
         {
             base.Initialize(dataProvider);
+            DataProvider.SingleTouchEvent.AddListener(OnSingleTouch);
             _startTime = Time.realtimeSinceStartup;
             _gasMat = gasPs.GetComponent<Renderer>().material;
             _tornadoMat = tornadoPs.GetComponent<Renderer>().material;
             _particleSystems = transform.parent.GetComponentsInChildren<ParticleSystem>();
+        }
+
+        private void OnSingleTouch()
+        {
+            isBloodRotating = !isBloodRotating;
+
+            if (!isBloodRotating)
+            {
+                _bloodTweenA = bloodSystemA.DOLocalRotate(_bloodAInitRot, 1);
+                _bloodTweenC = bloodSystemC.DOLocalRotate(_bloodCInitRot, 1);
+                return;
+            }
+
+            if (_bloodTweenA != null)
+            {
+                _bloodTweenA.Kill();
+                _bloodTweenC.Kill();
+            }
         }
 
         private void Update()
@@ -62,8 +91,6 @@ namespace Code
                 return;
             }
             
-            Debug.Log("isMoving: " + DataProvider.IsMoving);
-
             var timePassed = Time.realtimeSinceStartup - _startTime;
             if (!_delayPassed && timePassed < startDelay)
             {
@@ -71,6 +98,12 @@ namespace Code
             }
 
             _delayPassed = true;
+
+            if (isBloodRotating)
+            {
+                bloodSystemA.Rotate(Vector3.up, bloodRotationAngles * Time.deltaTime, Space.World);
+                bloodSystemC.Rotate(Vector3.up, -bloodRotationAngles * Time.deltaTime, Space.World);
+            }
             
             if (timePassed > tornadoFadeDelay)
             {
