@@ -38,7 +38,7 @@ public class ArObject3Manager : ArObjectManagerBase
     public float rotationDelay = 4;
     public float rotationRadius = 1;
     
-    public RotateAroundObject rotationScript;
+    public RotateAroundObjectToRayCircleIntersection rotationScript;
 
     private float _startTime;
     private Material _coloredFlameMat;

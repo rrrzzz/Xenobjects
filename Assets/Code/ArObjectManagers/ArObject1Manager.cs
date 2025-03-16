@@ -94,11 +94,11 @@ namespace Code
 
             SetFogByDistance();
 
-            // if (!_wasPathDrawingCompleted && DataProvider.IdleDuration > idleDurationThreshold && !_isPathDrawingActive)
-            // {
-            //     _isPathDrawingActive = true;
-            //     StartCoroutine(PathfindingCoroutine());
-            // }
+            if (!_wasPathDrawingCompleted && DataProvider.IdleDuration > idleDurationThreshold && !_isPathDrawingActive)
+            {
+                _isPathDrawingActive = true;
+                StartCoroutine(PathfindingCoroutine());
+            }
             
             if (_isPathDrawingActive)
             {

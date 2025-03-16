@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Code.Utils
 {
     [ExecuteAlways]
-    public class RotateAroundObject : MonoBehaviour
+    public class RotateAroundObjectToRayCircleIntersection : MonoBehaviour
     {
         public float startAngle = 270;
         public float heightOffset = .14f;
