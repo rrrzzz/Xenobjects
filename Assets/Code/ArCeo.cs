@@ -3,16 +3,18 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
-using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using Button = UnityEngine.UI.Button;
+using Image = UnityEngine.UI.Image;
+using Toggle = UnityEngine.UI.Toggle;
 
 namespace Code
 {
     public class ArCeo : MonoBehaviour
     {
-        public Button button;
         public float checkTimeoutAfterSpawn = 10;
+        public ARPlaneManager arPlaneManager;
         public ARAnchorManager anchorManager;
         public ARRaycastManager raycastManager;
         public ARMovementInteractionDataProvider dataProvider;
@@ -34,7 +36,11 @@ namespace Code
         public Color firstObjectColor = Color.red;
         public Color secondObjectColor = Color.green;
         public Color thirdObjectColor = Color.blue;
-
+        public Button button1;
+        public Button button2;
+        public Button button3;
+        public Toggle isSpawningViaButtonsToggle;
+        
         private float _crossCheckStartTime;
         private Vector3 _verticalLineRotation = Vector3.zero;
         private Vector3 _horizontalLineRotation = Vector3.zero;
@@ -55,7 +61,10 @@ namespace Code
         private bool _hasCheckedCross;
         private bool _isSpawned;
         private bool _isManualMode;
-        
+        private bool _isPhoneHorizontal;
+        private bool _isAlignedWithCrosshair;
+        private bool _isArPlanesVisible;
+
         private void Start()
         {
             _phoneTransform = Camera.main.transform;
@@ -71,10 +80,54 @@ namespace Code
             
             _screenCenter = new Vector2(centerX, centerY);
             _horizontalCheckStartTime = _crossCheckStartTime = Time.realtimeSinceStartup;
-            button.onClick.AddListener(() =>
+            // button.onClick.AddListener(() =>
+            // {
+            //     _isManualMode = !_isManualMode;
+            // });
+
+            _isManualMode = isSpawningViaButtonsToggle.isOn;
+            button1.onClick.AddListener(() => SpawnObjectManually(prefabs[0]));
+            button2.onClick.AddListener(() => SpawnObjectManually(prefabs[1]));
+            button3.onClick.AddListener(() => SpawnObjectManually(prefabs[2]));
+            
+            isSpawningViaButtonsToggle.onValueChanged.AddListener(isManualSpawnOn => _isManualMode = isManualSpawnOn);
+        }
+
+        private void SpawnObjectManually(GameObject prefab)
+        {
+            if (!_isManualMode || !_isPhoneHorizontal || !_isAlignedWithCrosshair)
+                return;
+            
+            raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
+
+            if (_planeHits.Count == 0) 
+                return;
+            
+            crosshair.SetActive(false);
+            
+            chosenPrefab = prefab;
+            
+            CreateAnchor(_planeHits[0]);
+
+            ToggleArPlanesVisibility(false);
+            _planeWasAdded = false;
+            _isAlignedWithCrosshair = false;
+            _isPhoneHorizontal = false;
+            _horizontalCheckStartTime = Time.realtimeSinceStartup + checkTimeoutAfterSpawn;
+        }
+
+        private void ToggleArPlanesVisibility(bool isVisible)
+        {
+            if (_isArPlanesVisible == isVisible)
+                return;
+            
+            _isArPlanesVisible = isVisible;
+            foreach (ARPlane plane in arPlaneManager.trackables)
             {
-                _isManualMode = !_isManualMode;
-            });
+                var meshVisualizer = plane.GetComponent<ARPlaneMeshVisualizer>();
+                if (meshVisualizer)
+                    meshVisualizer.enabled = isVisible;
+            }
         }
 
         //TODO remove crosshair if phone is not horizontal \ doesn't see color
@@ -92,6 +145,12 @@ namespace Code
                 return;
             }
 
+            if (_isManualMode)
+            {
+                ProcessManualSpawn();
+                return;
+            }
+
             if (!_checkingIfSeeingTarget && !_isTargetFound)
             {
                 if (Time.realtimeSinceStartup - _horizontalCheckStartTime >= horizontalCheckInterval)
@@ -100,6 +159,7 @@ namespace Code
                     _horizontalCheckStartTime = Time.realtimeSinceStartup;
                     if (!CheckPhoneApproximatelyHorizontal())
                     {
+                        crosshair.SetActive(false);
                         return;
                     }
                     anchorRotationText.text = "Phone is roughly horizontal";
@@ -136,7 +196,8 @@ namespace Code
                 _checkingIfSeeingTarget = false;
                 return;
             }
-            
+
+            ToggleArPlanesVisibility(true);
             //TODO: Maybe disable plane creation when plane is detected and object is created
             if (_isTargetFound && !_planeWasAdded)
             {
@@ -195,8 +256,8 @@ namespace Code
 
             if (colorAnalyzer.dominantColor == Color.clear)
             {
-                _isTargetFound = false;
                 anchorRotationText.text = "No color detected when phone aligned with crosshair, probably moved it away.";
+                _isTargetFound = false;
                 colorAnalyzer.isProcessingSuccess = false;
                 _hasCheckedCross = false;
                 return;
@@ -213,6 +274,7 @@ namespace Code
                 {
                     SetPrefabBasedOnColor(colorAnalyzer.dominantColor);
                     CreateAnchor(_planeHits[0]);
+                    ToggleArPlanesVisibility(false);
                 }
                 
                 _horizontalCheckStartTime = Time.realtimeSinceStartup + checkTimeoutAfterSpawn;
@@ -223,7 +285,51 @@ namespace Code
             _planeWasAdded = false;  
             _hasCheckedCross = false;
         }
-        
+
+        private void ProcessManualSpawn()
+        {
+            if (Time.realtimeSinceStartup - _horizontalCheckStartTime >= horizontalCheckInterval)
+            {
+                _horizontalCheckStartTime = Time.realtimeSinceStartup;
+                _isPhoneHorizontal = CheckPhoneApproximatelyHorizontal();
+            }
+
+            if (!_isPhoneHorizontal)
+            {
+                crosshair.SetActive(false);
+                ToggleArPlanesVisibility(false);
+                return;
+            }
+            
+            ToggleArPlanesVisibility(true);
+            
+            if (!_planeWasAdded)
+            {
+                raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
+                if (_planeHits.Count != 0)
+                {
+                    anchorRotationText.text = "Plane found";
+
+                    _planeWasAdded = true;
+                    planeScanTip.SetActive(false);
+                }
+                else
+                {
+                    anchorRotationText.text = "No plane, showing tip";
+                    planeScanTip.SetActive(true);
+                }
+                
+                return;
+            }
+            
+            if (!crosshair.activeInHierarchy)
+            {
+                crosshair.SetActive(true);
+            }
+
+            _isAlignedWithCrosshair = CheckPhoneAlignedWithCrosshair();
+        }
+
         private void SetPrefabBasedOnColor(Color targetColor)
         {
             if (targetColor == firstObjectColor)
@@ -343,9 +449,16 @@ namespace Code
 
             _currentPrefab = Instantiate(chosenPrefab, _currentAnchor.transform.position + offset, rotation,
                 _currentAnchor.transform);
+
+            var prefabRotation = 180;
+            
+            if (chosenPrefab.name == prefabs[2].name)
+            {
+                prefabRotation += 90;
+            }
             
             _currentPrefab.transform.forward = _phoneTransform.up;
-            _currentPrefab.transform.Rotate(_currentAnchor.transform.up, 180);
+            _currentPrefab.transform.Rotate(_currentAnchor.transform.up, prefabRotation);
             
             dataProvider.SetArObjectTransform(_currentPrefab.transform);
         }

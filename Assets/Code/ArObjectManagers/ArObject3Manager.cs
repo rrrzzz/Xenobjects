@@ -88,10 +88,10 @@ public class ArObject3Manager : ArObjectManagerBase
         }
 
         //TODO remove when set
-        if (DataProvider.TryGetParamValue(out var transformData) && transformData[0] != 0)
-        {
-            rotationScript.radius = transformData[0];
-        }
+        // if (DataProvider.TryGetParamValue(out var transformData) && transformData[0] != 0)
+        // {
+        //     rotationScript.radius = transformData[0];
+        // }
     }
 
     private void UpdateColoredFlameAndCoreGlow()

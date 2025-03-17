@@ -117,6 +117,14 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6722823148156107529, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
+      propertyPath: bloodSystemA
+      value: 
+      objectReference: {fileID: 1523722227437862373}
+    - target: {fileID: 6722823148156107529, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
+      propertyPath: bloodSystemC
+      value: 
+      objectReference: {fileID: 1529889957771215093}
+    - target: {fileID: 6722823148156107529, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: tornadoTransform
       value: 
       objectReference: {fileID: 3673527433669956444}
@@ -169,6 +177,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
+--- !u!4 &1523722227437862373 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8958289349741453138, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
+  m_PrefabInstance: {fileID: 7599655019021722295}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1529889957771215093 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8956576872723505730, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
+  m_PrefabInstance: {fileID: 7599655019021722295}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3673527433669956444 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6597096453380846059, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
