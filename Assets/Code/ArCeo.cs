@@ -452,11 +452,6 @@ namespace Code
 
             var prefabRotation = 180;
             
-            if (chosenPrefab.name == prefabs[2].name)
-            {
-                prefabRotation += 90;
-            }
-            
             _currentPrefab.transform.forward = _phoneTransform.up;
             _currentPrefab.transform.Rotate(_currentAnchor.transform.up, prefabRotation);
             

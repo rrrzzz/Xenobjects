@@ -3406,7 +3406,7 @@ MonoBehaviour:
   prefabs:
   - {fileID: 2325789164882437802, guid: 1fbf0dfa5f6c55a4897ce657de477c17, type: 3}
   - {fileID: 3915640503971262700, guid: 13d55a5d14c4ade498b79ed1f153f484, type: 3}
-  - {fileID: 2546783936141597339, guid: 2aa2ae28444b3f44fb956827f8541bd2, type: 3}
+  - {fileID: 1111464153752497574, guid: 8968f40a784d10d4d9f87bc973dd4e7b, type: 3}
   inputFloats: {fileID: 813847034}
   crosshairAimingThreshold: 2
   horizontalThreshold: 10
@@ -3425,7 +3425,6 @@ MonoBehaviour:
   button2: {fileID: 1228520932}
   button3: {fileID: 1328224050}
   isSpawningViaButtonsToggle: {fileID: 1047286517}
-  isChangingObject2Rotation: {fileID: 0}
 --- !u!4 &1588800224
 Transform:
   m_ObjectHideFlags: 0
