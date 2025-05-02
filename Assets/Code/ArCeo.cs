@@ -40,6 +40,7 @@ namespace Code
         public Button button2;
         public Button button3;
         public Toggle isSpawningViaButtonsToggle;
+        public MovementPathVisualizer movementPathVisualizer;
         
         private float _crossCheckStartTime;
         private Vector3 _verticalLineRotation = Vector3.zero;
@@ -159,9 +160,11 @@ namespace Code
                     _horizontalCheckStartTime = Time.realtimeSinceStartup;
                     if (!CheckPhoneApproximatelyHorizontal())
                     {
+                        EnableMovementPathVizIfObjectSpawned();
                         crosshair.SetActive(false);
                         return;
                     }
+                    movementPathVisualizer.enabled = false;
                     anchorRotationText.text = "Phone is roughly horizontal";
 
                     // Debug.Log("Phone is roughly horizontal");
@@ -330,6 +333,14 @@ namespace Code
             _isAlignedWithCrosshair = CheckPhoneAlignedWithCrosshair();
         }
 
+        private void EnableMovementPathVizIfObjectSpawned()
+        {
+            if (_currentPrefab)
+            {
+                movementPathVisualizer.enabled = true;
+            }
+        }
+
         private void SetPrefabBasedOnColor(Color targetColor)
         {
             if (targetColor == firstObjectColor)
@@ -441,11 +452,19 @@ namespace Code
             //         rotation = Quaternion.Euler(0, val[1], 0);
             //     }
             // }
-            
+
+            movementPathVisualizer.enabled = true;
+                
             if (_currentPrefab)
             {
                 DestroyImmediate(_currentPrefab);
             }
+            else
+            {
+                movementPathVisualizer.Initialize();
+            }
+            
+            movementPathVisualizer.RestartTracking();
 
             _currentPrefab = Instantiate(chosenPrefab, _currentAnchor.transform.position + offset, rotation,
                 _currentAnchor.transform);
@@ -455,7 +474,7 @@ namespace Code
             _currentPrefab.transform.forward = _phoneTransform.up;
             _currentPrefab.transform.Rotate(_currentAnchor.transform.up, prefabRotation);
             
-            dataProvider.SetArObjectTransform(_currentPrefab.transform);
+            dataProvider.SetArObjectTransform(_currentPrefab.transform, movementPathVisualizer);
         }
 
         public bool TryGetParamValue(TMP_InputField paramField, out float[] val)

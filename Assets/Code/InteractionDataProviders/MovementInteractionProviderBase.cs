@@ -11,7 +11,7 @@ namespace Code
         public Transform arObjectTr;
         [SerializeField] protected bool isDebugInfoShown;
         [SerializeField] protected float maxTilt = 60;
-        [SerializeField] protected float maxTiltY = 15;
+        [SerializeField] protected float maxTiltY = 60;
         [SerializeField] protected float maxDistance = 3;
         [SerializeField] protected float minDistance = 1.5f;
         [SerializeField] protected float movementTrackingInterval = 1f;
@@ -92,10 +92,10 @@ namespace Code
             return Physics.Raycast(camTr.position, camTr.forward, out hit);
         }
 
-        public void SetArObjectTransform(Transform arObjectTransform)
+        public void SetArObjectTransform(Transform arObjectTransform, MovementPathVisualizer pathVisualizer)
         {
             arObjectTr = arObjectTransform;
-            arObjectTr.GetComponentInChildren<ArObjectManagerBase>().Initialize(this);
+            arObjectTr.GetComponentInChildren<ArObjectManagerBase>().Initialize(this, pathVisualizer);
         }
 
         private void UpdateMovementStatus()

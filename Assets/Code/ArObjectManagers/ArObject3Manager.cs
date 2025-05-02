@@ -19,6 +19,7 @@ public class ArObject3Manager : ArObjectManagerBase
     private const float SmokeDefStartSize = 0.051487f;
     private const float SmokeMinStartSize = 1.0297f;
     private const float SmokeMaxStartSize = 2f;
+    private const int InteractableElementsCount = 4;
     
     public ParticleSystem[] ribbons;
     public ParticleSystem objectCoreGlowPs;
@@ -50,10 +51,17 @@ public class ArObject3Manager : ArObjectManagerBase
     private readonly Stopwatch _oscillationTimer = new Stopwatch();
     private bool _isOscillating;
     private bool _isEndingOscillation;
+    
+    private int _usedInteractableElementsCount;
+    private bool _wasTentacleMoved;
+    private bool _wasSmokeChanged;
+    private bool _wasPhoneRotated;
+    private bool _wasTouchToggleUsed;
+    private bool _wasPathShown;
 
-    public override void Initialize(MovementInteractionProviderBase dataProvider)
+    public override void Initialize(MovementInteractionProviderBase dataProvider, MovementPathVisualizer pathVisualizer)
     {
-        base.Initialize(dataProvider);
+        base.Initialize(dataProvider, pathVisualizer);
         DataProvider.SingleTouchEvent.AddListener(OnSingleTouch);
         rotationScript.Init(transform.parent);
         rotationScript.radius = rotationRadius;
@@ -84,7 +92,19 @@ public class ArObject3Manager : ArObjectManagerBase
         
         if (DataProvider.IdleDuration > idleDurationThreshold)
         {
+            if (!_wasTentacleMoved)
+            {
+                _wasTentacleMoved = true;
+                _usedInteractableElementsCount++;
+            }
+            
             rotationScript.RotateToTargetAngle(DataProvider.camTr.position);
+        }
+        
+        if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
+        {
+            _wasPathShown = true;
+            PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
         }
 
         //TODO remove when set
@@ -101,6 +121,12 @@ public class ArObject3Manager : ArObjectManagerBase
         
         if (currentColor >= ColorFromWhiteThreshold)
         {
+            if (!_wasPhoneRotated)
+            {
+                _wasPhoneRotated = true;
+                _usedInteractableElementsCount++;
+            }
+            
             var saturation = 1 - (_glowColorHMin - currentColor) / (_glowColorHMin - ColorFromWhiteThreshold);
             if (saturation <= 0.3)
             {
@@ -128,6 +154,11 @@ public class ArObject3Manager : ArObjectManagerBase
     
     private void OnSingleTouch()
     {
+        if (!_wasTouchToggleUsed)
+        {
+            _wasTouchToggleUsed = true;
+            _usedInteractableElementsCount++;
+        }
         ToggleOscillatingEffect();
     }
 
@@ -160,6 +191,13 @@ public class ArObject3Manager : ArObjectManagerBase
     private void UpdateSmokeByDistance(ParticleSystem snowPs)
     {
         var t = Mathf.InverseLerp(smokeDistanceMin, smokeDistanceMax, DataProvider.DistanceToArObjectRaw);
+        
+        if (!_wasSmokeChanged && t >= .3f)
+        {
+            _wasSmokeChanged = true;
+            _usedInteractableElementsCount++;
+        }
+        
         var lifetime = Mathf.Lerp(SmokeMinLifetime, SmokeMaxLifetime, t);
         var particleCount = Mathf.Lerp(SmokeMinParticles, SmokeMaxParticles, t);
         var size = Mathf.Lerp(SmokeMinStartSize, SmokeMaxStartSize, t);

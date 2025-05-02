@@ -14,6 +14,7 @@ namespace Code
         private const float FogDistanceMax = 2f;
         private const float FogMin = .5f;
         private const float FogMax = 10;
+        private const int InteractableElementsCount = 5;
         
         public ParticleSystem swarmParticles;
         public ParticleSystem fogParticleSystem;
@@ -64,14 +65,21 @@ namespace Code
         private static int _puzzleTintId = Shader.PropertyToID("_TintColor");
         private Material[] _puzzleSegmentMaterials;
         private bool _isMaterialsSet;
+        private int _usedInteractableElementsCount;
+        private bool _wasTouchToggleUsed;
+        private bool _wasSwarmPlayed;
+        private bool _wasFogChanged;
+        private bool _wasCylinderDistorted;
+        private bool _wasObjectReenabled;
+        private bool _wasPathShown;
         
         private readonly Color _puzzleSolvedColor = new Color(2.27060f, 1.69304f, 0.71760f, 1.00000f);
         private readonly Color _originalColor = new Color(2.31267f, 1.72440f, 0.73089f, 1.00000f);
         private readonly Color _fadedPuzzleColor = new Color(1.39772f, 1.04183f, 0.44173f, 1.00000f);
 
-        public override void Initialize(MovementInteractionProviderBase dataProvider)
+        public override void Initialize(MovementInteractionProviderBase dataProvider, MovementPathVisualizer pathVisualizer)
         {
-            base.Initialize(dataProvider);
+            base.Initialize(dataProvider, pathVisualizer);
             SetEffectMaterials();
             
             _orbScale = orbObj.localScale;
@@ -104,9 +112,21 @@ namespace Code
             {
                 return;
             }
+
+            if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
+            {
+                _wasPathShown = true;
+                PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
+            }
             
             _orbGlow.SetEffectByNormalizedValue(DataProvider.DistanceToArObject01);   
             _distortion.SetEffectByNormalizedValue(DataProvider.TiltZ01);
+
+            if (!_wasCylinderDistorted)
+            {
+                _wasCylinderDistorted = true;
+                _usedInteractableElementsCount++;
+            }
             
             if (_isTouchToggleOn)
             {
@@ -117,6 +137,13 @@ namespace Code
         private void SetFogByDistance()
         {
             var t = Mathf.InverseLerp(FogDistanceMin, FogDistanceMax, DataProvider.DistanceToArObjectRaw);
+
+            if (!_wasFogChanged && t > .35f)
+            {
+                _wasFogChanged = true;
+                _usedInteractableElementsCount++;
+            }
+            
             var fogValue = Mathf.Lerp(FogMin, FogMax, t);
             var main = fogParticleSystem.main;
             // Debug.Log("Fog value: " + fogValue);
@@ -264,7 +291,13 @@ namespace Code
             _orbGlow.FadeColor(0, false);
             
             GrowOrb();
-            yield return new WaitForSeconds(orbScaleTime); 
+            yield return new WaitForSeconds(orbScaleTime);
+            if (!_wasObjectReenabled)
+            {
+                _wasObjectReenabled = true;
+                _usedInteractableElementsCount++;
+            }
+            
             FadeInEffects();
         }
         
@@ -335,7 +368,6 @@ namespace Code
                 {
                     if (!_isMidPulsing)
                     {
-                        Debug.LogError("out of while loop");
                         _isFinishedPulsing = true;
                         break;
                     }
@@ -358,6 +390,12 @@ namespace Code
             if (!swarmParticles.gameObject.activeInHierarchy)
             {
                 swarmParticles.gameObject.SetActive(true);
+            }
+
+            if (!_wasSwarmPlayed)
+            {
+                _wasSwarmPlayed = true;
+                _usedInteractableElementsCount++;
             }
             
             swarmParticles.Play();
@@ -425,6 +463,12 @@ namespace Code
                 return;
             }
 
+            if (!_wasTouchToggleUsed)
+            {
+                _wasTouchToggleUsed = true;
+                _usedInteractableElementsCount++;
+            }
+            
             _isTouchToggleOn = !_isTouchToggleOn;
             _distortion.ToggleOscillatingEffect();
         }

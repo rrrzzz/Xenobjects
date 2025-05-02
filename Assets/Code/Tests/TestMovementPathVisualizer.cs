@@ -9,6 +9,7 @@ public class TestMovementPathVisualizer : MonoBehaviour
 {
     public float recordInterval = 0.2f;
     public Button drawPathBtn;
+    public Button resetPathBtn;
     private LineRenderer _lineRenderer;
     private readonly List<Vector3> _recordedPositions = new List<Vector3>();
     private float _timer;
@@ -20,6 +21,11 @@ public class TestMovementPathVisualizer : MonoBehaviour
         if (drawPathBtn)
         {
             drawPathBtn.onClick.AddListener(UpdateLine);
+        }
+        
+        if (resetPathBtn)
+        {
+            resetPathBtn.onClick.AddListener(RestartTracking);
         }
         
         _filePath = Path.Combine(Application.persistentDataPath, "positions.bin");

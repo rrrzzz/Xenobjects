@@ -68,7 +68,6 @@ namespace Code.Effects
 
         public void SetEffectByNormalizedValue(float t)
         {
-            
             if (IsUsingFloat)
             {
                 SetInterpolatedVal(MinFloat, MaxFloat, t);

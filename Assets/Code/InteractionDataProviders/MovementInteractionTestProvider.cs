@@ -6,6 +6,7 @@ namespace Code
     {
         public float camRotationInputSpeed = 40;
         public bool addTransformOnAwake;
+        public MovementPathVisualizer movementPathVisualizer;
 
         protected override void Awake()
         {
@@ -14,8 +15,14 @@ namespace Code
             {
                 return;
             }
+
+            if (!movementPathVisualizer)
+            {
+                Debug.LogError("No path viz added to MovementInteractionTestProvider.");
+                return;
+            }
             
-            SetArObjectTransform(arObjectTr);
+            SetArObjectTransform(arObjectTr, movementPathVisualizer);
         }
 
         protected override void UpdatePhoneTiltAngle()

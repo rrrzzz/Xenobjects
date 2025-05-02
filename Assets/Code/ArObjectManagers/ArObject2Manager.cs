@@ -6,6 +6,8 @@ namespace Code
 {
     public class ArObject2Manager : ArObjectManagerBase
     {
+        private const int InteractableElementsCount = 4;
+        
         public float startDelay = 4;
         public float idleDurationMax = 4;
         public float movingDurationMax = 4;   
@@ -16,9 +18,9 @@ namespace Code
         public Transform bloodSystemA;
         public Transform bloodSystemC;
         public float bloodRotationAngles = 100;
-
         public Transform tornadoTransform;
         public ParticleSystem gasPs;
+        public bool isBloodRotating;
         
         private bool _delayPassed;
         private float _startTime;
@@ -54,11 +56,17 @@ namespace Code
          
         private ParticleSystem[] _particleSystems;
         private bool _isChangingAlpha = true;
-        public bool isBloodRotating;
+        
+        private int _usedInteractableElementsCount;
+        private bool _wasBloodToggleUsed;
+        private bool _wasTornadoFaded;
+        private bool _wasTornadoChangedByDistance;
+        private bool _wasEffectDisabledByStanding;
+        private bool _wasPathShown;
 
-        public override void Initialize(MovementInteractionProviderBase dataProvider)
+        public override void Initialize(MovementInteractionProviderBase dataProvider, MovementPathVisualizer pathVisualizer)
         {
-            base.Initialize(dataProvider);
+            base.Initialize(dataProvider, pathVisualizer);
             DataProvider.SingleTouchEvent.AddListener(OnSingleTouch);
             _startTime = Time.realtimeSinceStartup;
             _gasMat = gasPs.GetComponent<Renderer>().material;
@@ -68,6 +76,11 @@ namespace Code
 
         private void OnSingleTouch()
         {
+            if (!_wasBloodToggleUsed)
+            {
+                _wasBloodToggleUsed = true;
+                _usedInteractableElementsCount++;
+            }
             isBloodRotating = !isBloodRotating;
 
             if (!isBloodRotating)
@@ -105,12 +118,23 @@ namespace Code
                 bloodSystemC.Rotate(Vector3.up, -bloodRotationAngles * Time.deltaTime, Space.World);
             }
             
+            if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
+            {
+                _wasPathShown = true;
+                PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
+            }
+            
             if (timePassed > tornadoFadeDelay)
             {
                 var tornadoFadingTime = timePassed - tornadoFadeDelay; 
                 if (tornadoFadingTime <= 2)
                 {
                     var t = tornadoFadingTime / 2;
+                    if (!_wasTornadoFaded && t >= .5f)
+                    {
+                        _usedInteractableElementsCount++;
+                        _wasTornadoFaded = true;
+                    }
                     var alpha = Mathf.Lerp(1, 0.04f, t);
                     var currentCol = _tornadoMat.GetColor(TintColorId);
                     currentCol.a = alpha;
@@ -139,6 +163,12 @@ namespace Code
                 _isChangingAlpha = true;
             }
             
+            if (!_wasTornadoChangedByDistance && t >= .3f)
+            {
+                _usedInteractableElementsCount++;
+                _wasTornadoChangedByDistance = true;
+            }
+            
             tornadoTransform.localScale = Vector3.Lerp(_tornadoInitScale, _tornadoFinalScale, t);
             tornadoTransform.localPosition = Vector3.Lerp(_tornadoInitPos, _tornadoFinalPos, t);
         }
@@ -158,6 +188,12 @@ namespace Code
             
             var t = DataProvider.IsMoving ? Mathf.InverseLerp(0, movingDurationMax, DataProvider.MovementDuration) : 
                 Mathf.InverseLerp(0, idleDurationMax, DataProvider.IdleDuration);
+            
+            if (!_wasEffectDisabledByStanding && t >= .5f)
+            {
+                _usedInteractableElementsCount++;
+                _wasEffectDisabledByStanding = true;
+            }
             
             UpdateAlphaColorParticleSystems(t, DataProvider.IsMoving);
             UpdateMaterialAlphaParticleSystems(t, DataProvider.IsMoving);

@@ -16,7 +16,8 @@ public class ArTrackingManager : MonoBehaviour
     public GameObject arObject1Prefab;
     public GameObject arObject2Prefab;
     public GameObject arObject3Prefab;
-    // public GameObject[] contentPrefabs;
+    public MovementPathVisualizer pathVisualizer;
+
     public bool isSpawned;
     public GameObject spawnedContent;
     public ARMovementInteractionDataProvider dataProvider;
@@ -65,7 +66,7 @@ public class ArTrackingManager : MonoBehaviour
                 spawnedContent.transform.localRotation = Quaternion.Euler(0, q, 0);
             }
             
-            dataProvider.SetArObjectTransform(spawnedContent.transform);
+            dataProvider.SetArObjectTransform(spawnedContent.transform, pathVisualizer);
         }
     }
 
@@ -124,7 +125,7 @@ public class ArTrackingManager : MonoBehaviour
             spawnedContent = Instantiate(_currentPrefab, offsetPos, _currentPrefab.transform.rotation, _currentTrackedImg.transform);
             isSpawned = true;
 
-            dataProvider.SetArObjectTransform(spawnedContent.transform);
+            dataProvider.SetArObjectTransform(spawnedContent.transform, pathVisualizer);
         }
         
         // if (eventArgs.updated.Count != 0)
