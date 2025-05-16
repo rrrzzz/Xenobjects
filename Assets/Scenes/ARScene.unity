@@ -4485,7 +4485,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3351815527348455189, guid: 2a44812a1b42c4043b9a33407948ebd4, type: 3}
       propertyPath: visualizationDelay
-      value: 7
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

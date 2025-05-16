@@ -86,12 +86,14 @@ namespace Code
             //     _isManualMode = !_isManualMode;
             // });
 
-            _isManualMode = isSpawningViaButtonsToggle.isOn;
-            button1.onClick.AddListener(() => SpawnObjectManually(prefabs[0]));
-            button2.onClick.AddListener(() => SpawnObjectManually(prefabs[1]));
-            button3.onClick.AddListener(() => SpawnObjectManually(prefabs[2]));
-            
-            isSpawningViaButtonsToggle.onValueChanged.AddListener(isManualSpawnOn => _isManualMode = isManualSpawnOn);
+            if (button1 && button1.IsActive())
+            {
+                _isManualMode = isSpawningViaButtonsToggle.isOn;
+                button1.onClick.AddListener(() => SpawnObjectManually(prefabs[0]));
+                button2.onClick.AddListener(() => SpawnObjectManually(prefabs[1]));
+                button3.onClick.AddListener(() => SpawnObjectManually(prefabs[2]));
+                isSpawningViaButtonsToggle.onValueChanged.AddListener(isManualSpawnOn => _isManualMode = isManualSpawnOn);
+            }
         }
 
         private void SpawnObjectManually(GameObject prefab)

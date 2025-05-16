@@ -56,17 +56,19 @@ namespace Code
                 return;
             
             Vector3 currentPos = _camTransform.position;
+            
             if (_recordedPositions.Count == 0)
             {
-                _lastPosition = currentPos;
                 _recordedPositions.Add(currentPos);
             }
             else
             {
-                var difVector = _lastPosition - _recordedPositions[^1];
+                var difVector = currentPos - _recordedPositions[^1];
                 var maxDif = Mathf.Max(Mathf.Abs(difVector.x), Mathf.Abs(difVector.y), Mathf.Abs(difVector.z));
                 if (maxDif > positionDifThreshold)
+                {
                     _recordedPositions.Add(currentPos);
+                }
             }
             
             _intervalTimer = 0f;
@@ -75,6 +77,11 @@ namespace Code
         public IEnumerator ShowPathAfterDelay()
         {
             yield return new WaitForSeconds(visualizationDelay);
+
+            if (_lineRenderer == null)
+            {
+                Debug.Log("Line renderer is null");
+            }
             
             _lineRenderer.positionCount = _recordedPositions.Count;
             for (int i = 0; i < _recordedPositions.Count; i++)

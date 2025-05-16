@@ -15,10 +15,10 @@ public class ArObject3Manager : ArObjectManagerBase
     private const float SmokeMaxParticles = 10000;
     private const float SmokeDefLifetime = 0.1f;
     private const float SmokeMinLifetime = 0.7f;
-    private const float SmokeMaxLifetime = 2;
+    private const float SmokeMaxLifetime = 6;
     private const float SmokeDefStartSize = 0.051487f;
     private const float SmokeMinStartSize = 1.0297f;
-    private const float SmokeMaxStartSize = 2f;
+    private const float SmokeMaxStartSize = 8f;
     private const int InteractableElementsCount = 4;
     
     public ParticleSystem[] ribbons;
@@ -154,6 +154,8 @@ public class ArObject3Manager : ArObjectManagerBase
     
     private void OnSingleTouch()
     {
+        // UpdateSmokeByDistance(smokePs);
+        
         if (!_wasTouchToggleUsed)
         {
             _wasTouchToggleUsed = true;

@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1705101381460039790, guid: 548425fc64990404692c4e6c829eb7c5, type: 3}
       propertyPath: m_Name
-      value: Object_3_for AR_UV_Pivot_Corrected
+      value: Object_3_CorrectPivot_ProdVariant
       objectReference: {fileID: 0}
     - target: {fileID: 2081344728162648788, guid: 548425fc64990404692c4e6c829eb7c5, type: 3}
       propertyPath: m_LocalPosition.x

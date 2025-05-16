@@ -22,6 +22,8 @@ namespace Code
                 return;
             }
             
+            movementPathVisualizer.Initialize();
+            movementPathVisualizer.RestartTracking();
             SetArObjectTransform(arObjectTr, movementPathVisualizer);
         }
 

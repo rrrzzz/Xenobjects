@@ -114,7 +114,9 @@ namespace Code
             }
 
             if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
+            // if (!_wasPathShown && _usedInteractableElementsCount > 1)
             {
+                // Debug.LogError("Showing path");
                 _wasPathShown = true;
                 PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
             }
@@ -252,6 +254,8 @@ namespace Code
             
                     errorX = Mathf.Abs(rotationX);
                     errorY = Mathf.Abs(rotationY);
+                    
+                    
                     totalError = Mathf.Clamp01((errorX + errorY) / 360);
                     
                     tColor = 1 - totalError;
@@ -265,7 +269,7 @@ namespace Code
                         Debug.Log($"tColor: {tColor}");
                     }
                     
-                    if (tColor >= 0.995)
+                    if (tColor >= 0.96)
                     {
                         _isPuzzleCompleted = true;
                         puzzleTentacleSpline.RotateSegments(0, 0);
@@ -297,7 +301,7 @@ namespace Code
                 _wasObjectReenabled = true;
                 _usedInteractableElementsCount++;
             }
-            
+             
             FadeInEffects();
         }
         
