@@ -315,11 +315,11 @@ namespace SplineMesh
         
         public Vector3 GetGlobalNodePos(int nodeIdx) => _spline.transform.TransformPoint(_spline.nodes[nodeIdx].Position);
 
-        public void RotateSegments(float rotationX, float rotationY)
+        public void RotateSegments(float rotationY)
         {
             foreach (var tr in _segmentTransforms)
             {
-                tr.localRotation = Quaternion.Euler(rotationX, rotationY, 0);
+                tr.localRotation = Quaternion.Euler(0, rotationY, 0);
             }
         }
 

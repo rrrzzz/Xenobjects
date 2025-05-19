@@ -18,8 +18,7 @@ namespace Code
         
         public ParticleSystem swarmParticles;
         public ParticleSystem fogParticleSystem;
-        public float puzzleXOffset;
-        public float puzzleYOffset;
+        public float puzzleYOffset = 90f;
         public float puzzleAppearingTime = 1f;
         public float delayBeforeInitShrinking = 1;
         public float delayBeforeMidGrowing = 1;
@@ -58,7 +57,6 @@ namespace Code
         private bool _isFinishedPulsing;
         private bool _isPathEndReached;
         private bool _isPuzzleCompleted;
-        private float _startPuzzleXRotation;
         private float _startPuzzleYRotation;
         private bool _wasPathDrawingCompleted;
         private bool _isFirstHit;
@@ -222,9 +220,9 @@ namespace Code
             _isFirstHit = true;
             _isPuzzleCompleted = false;
             SetRandomPuzzleRotation();
-            var errorX = Mathf.Abs(_startPuzzleXRotation);
+            // var errorX = Mathf.Abs(_startPuzzleXRotation);
             var errorY = Mathf.Abs(_startPuzzleYRotation);
-            var totalError = Mathf.Clamp01((errorX + errorY) / 360);
+            var totalError = Mathf.Clamp01((errorY) / 180);
                     
             var tColor = 1 - totalError;
             InterpolatePuzzleColor(tColor, true);
@@ -236,9 +234,9 @@ namespace Code
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    Debug.Log($"StartX: {_startPuzzleXRotation}, StartY: {_startPuzzleYRotation}");
+                    Debug.Log($"StartY: {_startPuzzleYRotation}");
                 }
-                // if (!_isFirstHit || (_dataProvider.GetForwardRayHit(out var hit) && hit.transform == puzzleTentacleSpline.transform))
+
                 if (!_isFirstHit || (DataProvider.GetForwardRayHit(out var hit) && hit.transform == puzzleTentacleSpline.transform))
                 {
                     if (_isFirstHit)
@@ -247,16 +245,14 @@ namespace Code
                         DataProvider.SetPuzzleEnteredRotation();
                     }
                     
-                    var rotationX = DataProvider.SignedTiltZ01 * 180 + _startPuzzleXRotation;
                     var rotationY = DataProvider.SignedTiltY01 * 180 + _startPuzzleYRotation;
             
-                    puzzleTentacleSpline.RotateSegments(rotationX, rotationY);
-            
-                    errorX = Mathf.Abs(rotationX);
+                    puzzleTentacleSpline.RotateSegments(rotationY);
+                    
                     errorY = Mathf.Abs(rotationY);
                     
                     
-                    totalError = Mathf.Clamp01((errorX + errorY) / 360);
+                    totalError = Mathf.Clamp01(errorY / 180);
                     
                     tColor = 1 - totalError;
                     
@@ -264,15 +260,15 @@ namespace Code
                     
                     if (Input.GetKeyDown(KeyCode.Space))
                     {
-                        Debug.Log($"rotationX: {rotationX}, rotationY: {rotationY}");
-                        Debug.Log($"errorX: {errorX}, errorY: {errorY}");
+                        Debug.Log($"rotationX: rotationY: {rotationY}");
+                        Debug.Log($"errorX: errorY: {errorY}");
                         Debug.Log($"tColor: {tColor}");
                     }
                     
-                    if (tColor >= 0.96)
+                    if (tColor >= 0.98)
                     {
                         _isPuzzleCompleted = true;
-                        puzzleTentacleSpline.RotateSegments(0, 0);
+                        puzzleTentacleSpline.RotateSegments(0);
                         foreach (var mat in _puzzleSegmentMaterials)
                         {
                             mat.SetColor(_puzzleTintId, _originalColor);
@@ -332,14 +328,10 @@ namespace Code
 
         private void SetRandomPuzzleRotation()
         {
-            puzzleYOffset = puzzleXOffset;
-            _startPuzzleXRotation = Random.Range(puzzleXOffset, 180);
-            var coinFlip = Random.Range(0, 2);
-            _startPuzzleXRotation *= coinFlip == 0 ? 1 : -1;
             _startPuzzleYRotation = Random.Range(puzzleYOffset, 180);
-            coinFlip = Random.Range(0, 2);
+            var coinFlip = Random.Range(0, 2);
             _startPuzzleYRotation *= coinFlip == 0 ? 1 : -1;
-            puzzleTentacleSpline.RotateSegments(_startPuzzleXRotation, _startPuzzleYRotation);
+            puzzleTentacleSpline.RotateSegments(_startPuzzleYRotation);
         } 
 
         [Button]
