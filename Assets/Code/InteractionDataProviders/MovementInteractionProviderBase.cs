@@ -122,7 +122,7 @@ namespace Code
             
             if (isDebugInfoShown && movedTxt)
             {
-                // movedTxt.text = IsMoving ? "MOVING" : "IDLE";
+                movedTxt.text = IsMoving ? "MOVING" : "IDLE";
             }
 
             IdleDuration = MovementDuration = 0;

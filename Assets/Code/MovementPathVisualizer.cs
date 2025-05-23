@@ -76,20 +76,21 @@ namespace Code
 
         public IEnumerator ShowPathAfterDelay()
         {
-            yield return new WaitForSeconds(visualizationDelay);
-
-            if (_lineRenderer == null)
-            {
-                Debug.Log("Line renderer is null");
-            }
-            
-            _lineRenderer.positionCount = _recordedPositions.Count;
-            for (int i = 0; i < _recordedPositions.Count; i++)
-            {
-                _lineRenderer.SetPosition(i, _recordedPositions[i]);
-            }
-
-            _isRecordingPath = false;
+            // yield return new WaitForSeconds(visualizationDelay);
+            //
+            // if (_lineRenderer == null)
+            // {
+            //     Debug.Log("Line renderer is null");
+            // }
+            //
+            // _lineRenderer.positionCount = _recordedPositions.Count;
+            // for (int i = 0; i < _recordedPositions.Count; i++)
+            // {
+            //     _lineRenderer.SetPosition(i, _recordedPositions[i]);
+            // }
+            //
+            // _isRecordingPath = false;
+            yield return null;
         }
     
         public void RestartTracking()

@@ -114,7 +114,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6581831783090701721, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6722823148156107529, guid: 451bac7b7ed0d8943ab56d64bf062356, type: 3}
       propertyPath: bloodSystemA

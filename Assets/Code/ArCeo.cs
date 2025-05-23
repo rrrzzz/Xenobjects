@@ -81,12 +81,8 @@ namespace Code
             
             _screenCenter = new Vector2(centerX, centerY);
             _horizontalCheckStartTime = _crossCheckStartTime = Time.realtimeSinceStartup;
-            // button.onClick.AddListener(() =>
-            // {
-            //     _isManualMode = !_isManualMode;
-            // });
-
-            if (button1 && button1.IsActive())
+            
+            if (button1 && button1.gameObject.activeInHierarchy)
             {
                 _isManualMode = isSpawningViaButtonsToggle.isOn;
                 button1.onClick.AddListener(() => SpawnObjectManually(prefabs[0]));
@@ -121,16 +117,16 @@ namespace Code
 
         private void ToggleArPlanesVisibility(bool isVisible)
         {
-            if (_isArPlanesVisible == isVisible)
-                return;
-            
-            _isArPlanesVisible = isVisible;
-            foreach (ARPlane plane in arPlaneManager.trackables)
-            {
-                var meshVisualizer = plane.GetComponent<ARPlaneMeshVisualizer>();
-                if (meshVisualizer)
-                    meshVisualizer.enabled = isVisible;
-            }
+            // if (_isArPlanesVisible == isVisible)
+            //     return;
+            //
+            // _isArPlanesVisible = isVisible;
+            // foreach (ARPlane plane in arPlaneManager.trackables)
+            // {
+            //     var meshVisualizer = plane.GetComponent<ARPlaneMeshVisualizer>();
+            //     if (meshVisualizer)
+            //         meshVisualizer.enabled = isVisible;
+            // }
         }
 
         //TODO remove crosshair if phone is not horizontal \ doesn't see color

@@ -90,7 +90,7 @@ public class ArObject3Manager : ArObjectManagerBase
             return;
         }
         
-        if (DataProvider.IdleDuration > idleDurationThreshold)
+        if (DataProvider.IdleDuration > idleDurationThreshold && !rotationScript.isRotating)
         {
             if (!_wasTentacleMoved)
             {
