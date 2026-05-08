@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using Deform;
 using System.Collections.Generic;
@@ -11,15 +11,15 @@ namespace DeformEditor
 		[MenuItem ("Tools/Deform/Actions/Clean All Deformables", priority = 10100)]
 		public static void CleanAllDeformables ()
 		{
-			var deformables = GameObject.FindObjectsOfType<Deformable> ();
+			var deformables = Object.FindObjectsByType<Deformable>(FindObjectsInactive.Exclude);
 
 			Undo.RecordObjects (deformables, "Cleaned All Deformables");
 			foreach (var deformable in deformables)
 				deformable.DeformerElements.RemoveAll (t => t.Component == null);
-			
-			var groupDeformers = GameObject.FindObjectsOfType<GroupDeformer> ();
 
-			Undo.RecordObjects (groupDeformers, "Cleaned All Deformables");
+			var groupDeformers = Object.FindObjectsByType<GroupDeformer>(FindObjectsInactive.Exclude);
+
+			Undo.RecordObjects (groupDeformers.Cast<Object>().ToArray(), "Cleaned All Deformables");
 			foreach (var groupDeformer in groupDeformers)
 				groupDeformer.DeformerElements.RemoveAll (t => t.Component == null);
 
@@ -38,7 +38,7 @@ namespace DeformEditor
 		[MenuItem ("Tools/Deform/Actions/Strip All Deformables", priority = 10101)]
 		public static void StripAllDeformablesFromMeshes ()
 		{
-			var deformables = GameObject.FindObjectsOfType<Deformable> ();
+			var deformables = Object.FindObjectsByType<Deformable>(FindObjectsInactive.Exclude);
 			Undo.SetCurrentGroupName ("Stripped All Deformables");
 			foreach (var deformable in deformables)
 			{

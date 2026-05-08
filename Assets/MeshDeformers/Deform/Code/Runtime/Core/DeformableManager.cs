@@ -13,6 +13,7 @@ namespace Deform
 	{
 		private static readonly string DEF_MANAGER_NAME = "DefaultDeformableManager";
 
+		[ClearOnReload]
 		private static DeformableManager defaultInstance;
 		/// <summary>
 		/// Returns the default manager.

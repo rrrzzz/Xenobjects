@@ -14,7 +14,7 @@ namespace Code
 
         private LineRenderer _lineRenderer;
         private float _intervalTimer;
-        private float _globalTimer;
+        //private float _globalTimer;
         private Transform _camTransform;
         private readonly List<Vector3> _recordedPositions = new List<Vector3>();
         private Vector3 _lastPosition;
@@ -98,7 +98,7 @@ namespace Code
             _recordedPositions.Clear();
             _lineRenderer.positionCount = 0;
             _intervalTimer = 0;
-            _globalTimer = 0;
+            // _globalTimer = 0;
             _isRecordingPath = true;
         }
     }

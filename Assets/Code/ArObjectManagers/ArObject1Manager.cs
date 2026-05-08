@@ -60,7 +60,7 @@ namespace Code
         private float _startPuzzleYRotation;
         private bool _wasPathDrawingCompleted;
         private bool _isFirstHit;
-        private static int _puzzleTintId = Shader.PropertyToID("_TintColor");
+        private static readonly int _puzzleTintId = Shader.PropertyToID("_TintColor");
         private Material[] _puzzleSegmentMaterials;
         private bool _isMaterialsSet;
         private int _usedInteractableElementsCount;

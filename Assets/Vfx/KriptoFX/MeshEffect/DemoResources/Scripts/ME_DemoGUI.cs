@@ -218,7 +218,7 @@ public class ME_DemoGUI : MonoBehaviour
 
     void RemoveClones()
     {
-        var allGO = FindObjectsOfType<GameObject>();
+        var allGO = FindObjectsByType<GameObject>(FindObjectsInactive.Exclude);
         foreach (var go in allGO)
         {
             if (go.name.Contains("(Clone)")) Destroy(go);
