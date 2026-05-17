@@ -51,10 +51,10 @@ MonoBehaviour:
   - position: {x: 0.98568577, y: 0.43299007, z: 0.29244265}
     directionType: 0
     direction: {x: 0.7412934, y: 0.8728734, z: 0.31067088}
-    directionIn: {x: 0, y: 0, z: 0}
+    directionIn: {x: 1.2300782, y: -0.006893277, z: 0.27421442}
     directionOut: {x: 0.7412934, y: 0.8728734, z: 0.31067088}
     up: {x: 0, y: 1, z: 0}
-    scale: {x: 0.40978876, y: 0.40978876}
+    scale: {x: 0.033458535, y: 0.033458535}
     roll: 0
   - position: {x: 0.52324677, y: 0.72200584, z: 0.18689477}
     directionType: 0
@@ -62,7 +62,7 @@ MonoBehaviour:
     directionIn: {x: 0.76763916, y: 0.6452769, z: 0.16866654}
     directionOut: {x: 0.27885437, y: 0.7987348, z: 0.205123}
     up: {x: 0, y: 1, z: 0}
-    scale: {x: 0.2795301, y: 0.2795301}
+    scale: {x: -0.09680013, y: -0.09680013}
     roll: 0
   - position: {x: 0.32932386, y: 0.8350123, z: 0.61059666}
     directionType: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
     directionIn: {x: 0.24855146, y: 0.942863, z: 0.5053757}
     directionOut: {x: 0.41009626, y: 0.72716165, z: 0.71581763}
     up: {x: 0, y: 1, z: 0}
-    scale: {x: 0.15608373, y: 0.15608373}
+    scale: {x: -0.2202465, y: -0.2202465}
     roll: 0
   - position: {x: 0.4733312, y: 0.50501776, z: 0.94335675}
     directionType: 0
@@ -78,25 +78,25 @@ MonoBehaviour:
     directionIn: {x: 0.68897605, y: 0.5043626, z: 0.88568807}
     directionOut: {x: 0.25768638, y: 0.50567293, z: 1.0010254}
     up: {x: 0, y: 1, z: 0}
-    scale: {x: 0.03544101, y: 0.03544101}
+    scale: {x: -0.34088922, y: -0.34088922}
     roll: 0
   - position: {x: 0.5210506, y: 0.31774458, z: 0.6044626}
     directionType: 0
     direction: {x: 0.81425077, y: 0.21535546, z: 0.4775508}
     directionIn: {x: 0.22785038, y: 0.4201337, z: 0.73137444}
-    directionOut: {x: 0, y: 0, z: 0}
+    directionOut: {x: 0.81425077, y: 0.21535546, z: 0.4775508}
     up: {x: 0, y: 1, z: 0}
-    scale: {x: -0.09021124, y: -0.09021124}
+    scale: {x: -0.46654147, y: -0.46654147}
     roll: 0
   curves:
   - n1:
       position: {x: 0.98568577, y: 0.43299007, z: 0.29244265}
       directionType: 0
       direction: {x: 0.7412934, y: 0.8728734, z: 0.31067088}
-      directionIn: {x: 0, y: 0, z: 0}
+      directionIn: {x: 1.2300782, y: -0.006893277, z: 0.27421442}
       directionOut: {x: 0.7412934, y: 0.8728734, z: 0.31067088}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.40978876, y: 0.40978876}
+      scale: {x: 0.033458535, y: 0.033458535}
       roll: 0
     n2:
       position: {x: 0.52324677, y: 0.72200584, z: 0.18689477}
@@ -105,7 +105,7 @@ MonoBehaviour:
       directionIn: {x: 0.76763916, y: 0.6452769, z: 0.16866654}
       directionOut: {x: 0.27885437, y: 0.7987348, z: 0.205123}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.2795301, y: 0.2795301}
+      scale: {x: -0.09680013, y: -0.09680013}
       roll: 0
     Changed:
       m_PersistentCalls:
@@ -117,7 +117,7 @@ MonoBehaviour:
       directionIn: {x: 0.76763916, y: 0.6452769, z: 0.16866654}
       directionOut: {x: 0.27885437, y: 0.7987348, z: 0.205123}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.2795301, y: 0.2795301}
+      scale: {x: -0.09680013, y: -0.09680013}
       roll: 0
     n2:
       position: {x: 0.32932386, y: 0.8350123, z: 0.61059666}
@@ -126,7 +126,7 @@ MonoBehaviour:
       directionIn: {x: 0.24855146, y: 0.942863, z: 0.5053757}
       directionOut: {x: 0.41009626, y: 0.72716165, z: 0.71581763}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.15608373, y: 0.15608373}
+      scale: {x: -0.2202465, y: -0.2202465}
       roll: 0
     Changed:
       m_PersistentCalls:
@@ -138,7 +138,7 @@ MonoBehaviour:
       directionIn: {x: 0.24855146, y: 0.942863, z: 0.5053757}
       directionOut: {x: 0.41009626, y: 0.72716165, z: 0.71581763}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.15608373, y: 0.15608373}
+      scale: {x: -0.2202465, y: -0.2202465}
       roll: 0
     n2:
       position: {x: 0.4733312, y: 0.50501776, z: 0.94335675}
@@ -147,7 +147,7 @@ MonoBehaviour:
       directionIn: {x: 0.68897605, y: 0.5043626, z: 0.88568807}
       directionOut: {x: 0.25768638, y: 0.50567293, z: 1.0010254}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.03544101, y: 0.03544101}
+      scale: {x: -0.34088922, y: -0.34088922}
       roll: 0
     Changed:
       m_PersistentCalls:
@@ -159,16 +159,16 @@ MonoBehaviour:
       directionIn: {x: 0.68897605, y: 0.5043626, z: 0.88568807}
       directionOut: {x: 0.25768638, y: 0.50567293, z: 1.0010254}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: 0.03544101, y: 0.03544101}
+      scale: {x: -0.34088922, y: -0.34088922}
       roll: 0
     n2:
       position: {x: 0.5210506, y: 0.31774458, z: 0.6044626}
       directionType: 0
       direction: {x: 0.81425077, y: 0.21535546, z: 0.4775508}
       directionIn: {x: 0.22785038, y: 0.4201337, z: 0.73137444}
-      directionOut: {x: 0, y: 0, z: 0}
+      directionOut: {x: 0.81425077, y: 0.21535546, z: 0.4775508}
       up: {x: 0, y: 1, z: 0}
-      scale: {x: -0.09021124, y: -0.09021124}
+      scale: {x: -0.46654147, y: -0.46654147}
       roll: 0
     Changed:
       m_PersistentCalls:

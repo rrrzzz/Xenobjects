@@ -23,9 +23,6 @@ public class ArTrackingManager : MonoBehaviour
     public ARMovementInteractionDataProvider dataProvider;
     
     private GameObject _currentPrefab;
-    private ARTrackedImage _trackedImg1;
-    private ARTrackedImage _trackedImg2;
-    private ARTrackedImage _trackedImg3;
     private ARTrackedImage _currentTrackedImg;
     private string _currentTrackedName;
     
@@ -35,171 +32,109 @@ public class ArTrackingManager : MonoBehaviour
     
     private void OnEnable()
     { 
-        trackedImgManager.trackedImagesChanged += OnChanged;
+        trackedImgManager.trackablesChanged.AddListener(OnChanged);
         dataProvider.DoubleTouchEvent.AddListener(RespawnObject);
+    }
+
+    private void OnDisable()
+    {
+        trackedImgManager.trackablesChanged.RemoveListener(OnChanged);
+        dataProvider.DoubleTouchEvent.RemoveListener(RespawnObject);
+    }
+
+    private void OnChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
+    {
+        if (eventArgs.added.Count == 0)
+            return;
+
+        _currentTrackedImg = eventArgs.added[0];
+        _currentTrackedName = _currentTrackedImg.referenceImage.name;
+
+        imageRecognizedEvent.Invoke(_currentTrackedName);
+
+        if (_currentTrackedName == Object1TrackedImgName)
+            _currentPrefab = arObject1Prefab;
+        else if (_currentTrackedName == Object2TrackedImgName)
+            _currentPrefab = arObject2Prefab;
+        else if (_currentTrackedName == Object3TrackedImgName)
+            _currentPrefab = arObject3Prefab;
+
+        if (spawnedContent)
+            DestroyImmediate(spawnedContent);
+
+        Vector3 offsetPos = _currentTrackedImg.transform.position;
+
+        if (_currentTrackedName == Object1TrackedImgName)
+            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object1Offset);
+        else if (_currentTrackedName == Object2TrackedImgName)
+            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object2Offset);
+        else if (_currentTrackedName == Object3TrackedImgName)
+            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object3Offset);
+
+        spawnedContent = Instantiate(
+            _currentPrefab,
+            offsetPos,
+            _currentTrackedImg.transform.rotation,
+            _currentTrackedImg.transform
+        );
+
+        isSpawned = true;
+
+        dataProvider.SetArObjectTransform(spawnedContent.transform, pathVisualizer);
     }
 
     private void RespawnObject()
     {
+        if (_currentTrackedImg == null)
+            return;
+
         if (dataProvider.TryGetParamValue(out var transformData))
         {
-            // imagePosRotTxt.text = "img pos: " +  _trackedImg.transform.position +"\nimg rot:" +  
-            //                       _trackedImg.transform.rotation + "\noffset: " + offset;
-            
             DestroyImmediate(spawnedContent);
+
             var x = transformData[0] * _currentTrackedImg.transform.right;
             var y = transformData[1] * _currentTrackedImg.transform.up;
             var z = transformData[2] * _currentTrackedImg.transform.forward;
-            
+
             var offsetPos = _currentTrackedImg.transform.position + x + y + z;
-            spawnedContent = Instantiate(_currentPrefab, offsetPos, _currentTrackedImg.transform.rotation, _currentTrackedImg.transform);
-            
+
+            spawnedContent = Instantiate(
+                _currentPrefab,
+                offsetPos,
+                _currentTrackedImg.transform.rotation,
+                _currentTrackedImg.transform
+            );
+
             if (transformData[3] != 0)
             {
-                var w = transformData[3];
-                spawnedContent.transform.localScale = new Vector3(w, w, w);
+                float scale = transformData[3];
+                spawnedContent.transform.localScale = Vector3.one * scale;
             }
-            
+
             if (transformData[4] != 0)
             {
-                var q = transformData[4];
-                spawnedContent.transform.localRotation = Quaternion.Euler(0, q, 0);
+                float yRotation = transformData[4];
+                spawnedContent.transform.localRotation = Quaternion.Euler(0, yRotation, 0);
             }
-            
+
             dataProvider.SetArObjectTransform(spawnedContent.transform, pathVisualizer);
         }
     }
 
-    private void OnDisable() => trackedImgManager.trackedImagesChanged -= OnChanged;
-    
-    private void OnChanged(ARTrackedImagesChangedEventArgs eventArgs)
+    private Vector3 GetWorldOffset(Transform trackedTransform, Vector3 localOffset)
     {
-        //TODO fix object spawning only once
-        if (eventArgs.added.Count != 0)
-        {
-            _currentTrackedImg = eventArgs.added[0];
-            _currentTrackedName = _currentTrackedImg.referenceImage.name;
-            imageRecognizedEvent.Invoke(_currentTrackedName);
-            
-            if (_currentTrackedImg.referenceImage.name == Object1TrackedImgName)
-            {
-                //TODO CHANGE THIS TO ONE
-                _currentPrefab = arObject1Prefab;
-            }
-            else if (_currentTrackedImg.referenceImage.name == Object2TrackedImgName)
-            {
-                _currentPrefab = arObject2Prefab;
-            }
-            else if (_currentTrackedImg.referenceImage.name == Object3TrackedImgName)
-            {
-                _currentPrefab = arObject3Prefab;
-            }
-
-            if (spawnedContent)
-            {
-                DestroyImmediate(spawnedContent);
-            }
-
-            var offsetPos = _currentTrackedImg.transform.position; 
-            
-            //TODO: Add three objects
-            if (_currentTrackedImg.referenceImage.name == Object1TrackedImgName)
-            {
-                offsetPos += _currentTrackedImg.transform.right * _object1Offset.x + 
-                             _currentTrackedImg.transform.up * _object1Offset.y + 
-                             _currentTrackedImg.transform.forward * _object1Offset.z;
-            }
-            else if (_currentTrackedImg.referenceImage.name == Object2TrackedImgName)
-            {
-                offsetPos += _currentTrackedImg.transform.right * _object2Offset.x + 
-                             _currentTrackedImg.transform.up * _object2Offset.y + 
-                             _currentTrackedImg.transform.forward * _object2Offset.z;
-            }
-            else if (_currentTrackedImg.referenceImage.name == Object3TrackedImgName)
-            {
-                offsetPos += _currentTrackedImg.transform.right * _object3Offset.x + 
-                             _currentTrackedImg.transform.up * _object3Offset.y + 
-                             _currentTrackedImg.transform.forward * _object3Offset.z;
-            }
-
-            spawnedContent = Instantiate(_currentPrefab, offsetPos, _currentPrefab.transform.rotation, _currentTrackedImg.transform);
-            isSpawned = true;
-
-            dataProvider.SetArObjectTransform(spawnedContent.transform, pathVisualizer);
-        }
-        
-        // if (eventArgs.updated.Count != 0)
-        // {
-        //     var updatedImage = eventArgs.updated[0];
-        //     var updatedName = updatedImage.referenceImage.name;
-        //     if (updatedName == _currentTrackedName)
-        //         return;
-        //
-        //     _currentTrackedImg = updatedImage;
-        //     _currentTrackedName = updatedName;
-        //     
-        //     imageRecognizedEvent.Invoke(_currentTrackedImg.referenceImage.name);
-        //     if (_currentTrackedName == Object1TrackedImgName)
-        //     {
-        //         //TODO CHANGE THIS TO ONE
-        //         _currentPrefab = arObject2Prefab;
-        //     }
-        //     else if (_currentTrackedName == Object2TrackedImgName)
-        //     {
-        //         _currentPrefab = arObject2Prefab;
-        //     }
-        //     else if (_currentTrackedName == Object3TrackedImgName)
-        //     {
-        //         _currentPrefab = arObject3Prefab;
-        //     }
-        //
-        //     if (spawnedContent)
-        //     {
-        //         DestroyImmediate(spawnedContent);
-        //     }
-        //
-        //     var offsetPos = _currentTrackedImg.transform.position; 
-        //     
-        //     //TODO: Add three objects
-        //     if (_currentTrackedImg.referenceImage.name == Object2TrackedImgName || _currentTrackedImg.referenceImage.name == Object1TrackedImgName)
-        //     {
-        //         offsetPos += _currentTrackedImg.transform.right * _object2Offset.x + 
-        //                      _currentTrackedImg.transform.up * _object2Offset.y + 
-        //                      _currentTrackedImg.transform.forward * _object2Offset.z;
-        //     }
-        //     else if (_currentTrackedImg.referenceImage.name == Object3TrackedImgName)
-        //     {
-        //         offsetPos += _currentTrackedImg.transform.right * _object3Offset.x + 
-        //                      _currentTrackedImg.transform.up * _object3Offset.y + 
-        //                      _currentTrackedImg.transform.forward * _object3Offset.z;
-        //     }
-        //
-        //     spawnedContent = Instantiate(_currentPrefab, offsetPos, _currentPrefab.transform.rotation, _currentTrackedImg.transform);
-        //     isSpawned = true;
-        //
-        //     dataProvider.SetArObjectTransform(spawnedContent.transform);
-        // }
-
-        // if (eventArgs.updated.Count == 0) return;
-        // Quaternion additionalRotation = Quaternion.Euler(0f, 180f, 0f);
-        //
-        // spawnedContent.transform.position = _trackedImg.transform.position + Vector3.forward * 0.4f;
-        // spawnedContent.transform.rotation = _trackedImg.transform.rotation * additionalRotation;
-    }
-
-    private Vector3 GetOffsetPos(Transform trackedImgTransform, Vector3 objectOffset)
-    {
-         return trackedImgTransform.position += trackedImgTransform.right * objectOffset.x + 
-                                     trackedImgTransform.up * objectOffset.y + 
-                                     trackedImgTransform.forward * objectOffset.z;
+        return trackedTransform.right * localOffset.x +
+               trackedTransform.up * localOffset.y +
+               trackedTransform.forward * localOffset.z;
     }
 
     private void Update()
     {
         if (_currentTrackedImg)
         {
-            imagePosRotTxt.text = $"img pos: {_currentTrackedImg.transform.position}" +
-                                  $"\nimg rot: {_currentTrackedImg.transform.rotation.eulerAngles}";
+            imagePosRotTxt.text =
+                $"img pos: {_currentTrackedImg.transform.position}" +
+                $"\nimg rot: {_currentTrackedImg.transform.rotation.eulerAngles}";
         }
     }
 }
