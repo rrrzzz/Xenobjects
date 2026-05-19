@@ -47,3 +47,7 @@ Build via **File → Build Settings → Android** in the Unity Editor. No CLI bu
 - Shader property IDs are `private static readonly int` fields.
 - Use `[FormerlySerializedAs]` when renaming serialized fields to avoid losing scene data.
 - `Assets/Code/Utils/` and `Assets/Code/Tests/` contain dev-only utilities not used in the shipped build.
+
+## Working with Claude
+
+- If you are unsure which framework, library, input system, or API the project uses for a given task (e.g. XR input, tweening, networking), ASK the user instead of grepping or parsing large parts of the codebase to infer it. A one-line clarification is cheaper than a multi-agent exploration and avoids picking the wrong idiom.
