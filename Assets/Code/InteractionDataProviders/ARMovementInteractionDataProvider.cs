@@ -43,9 +43,9 @@ namespace Code
                 if (touch.phase != TouchPhase.Began) 
                     return;
                 
-                if (isDebugInfoShown && titlTxt)
+                if (isDebugInfoShown && tltTxt)
                 {
-                    titlTxt.text = "Single Touch at: " + Time.time;
+                    tltTxt.text = "Single Touch at: " + Time.time;
                 }
                 SingleTouchEvent.Invoke();
                 return;
@@ -62,9 +62,9 @@ namespace Code
 
             if (!(timeDifference < TouchTimeThreshold)) return;
 
-            if (isDebugInfoShown && titlTxt)
+            if (isDebugInfoShown && tltTxt)
             {
-                titlTxt.text = "Double Touch at: " + Time.time;
+                tltTxt.text = "Double Touch at: " + Time.time;
             }
             
             DoubleTouchEvent.Invoke();

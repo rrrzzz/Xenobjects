@@ -2,6 +2,7 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Code
@@ -21,7 +22,7 @@ namespace Code
         [SerializeField] protected TMP_Text cameraPosRotTxt;
         [SerializeField] protected TMP_Text distanceToObjTxt;
         [SerializeField] protected TMP_Text objPosTxt;
-        [SerializeField] protected TMP_Text titlTxt;
+        [FormerlySerializedAs("titlTxt")] [SerializeField] protected TMP_Text tltTxt;
         [SerializeField] protected TMP_Text movedTxt;
         [SerializeField] protected TMP_InputField paramField;
         

@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Unity:** 6000.4.5f1
 - **Platform:** Android (AR Foundation 6.4.2 + ARCore)
+- **VR target:** Meta Quest via OpenXR + XR Interaction Toolkit — prefer the new Input System / XRI actions over `UnityEngine.XR.InputDevices` (many `CommonUsages` features, e.g. `deviceAcceleration`, aren't populated on OpenXR).
 - **Main scene:** `Assets/Scenes/ARScene.unity`
 - **Desktop testing scene:** `Assets/Scenes/MuseumSimulation.unity` (no device needed)
 
@@ -47,6 +48,13 @@ Build via **File → Build Settings → Android** in the Unity Editor. No CLI bu
 - Shader property IDs are `private static readonly int` fields.
 - Use `[FormerlySerializedAs]` when renaming serialized fields to avoid losing scene data.
 - `Assets/Code/Utils/` and `Assets/Code/Tests/` contain dev-only utilities not used in the shipped build.
+
+## Code style
+
+- One statement per line — never put code after `;` on the same line.
+- Braces force multi-line: every statement inside `{ }` goes on its own indented line.
+- An if/else chain must use the same brace style across all branches — no mixing.
+- Braceless one-liner `if` is allowed, but the body still goes on its own indented line.
 
 ## Working with Claude
 
