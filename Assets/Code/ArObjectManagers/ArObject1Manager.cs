@@ -70,6 +70,7 @@ namespace Code
         private bool _wasCylinderDistorted;
         private bool _wasObjectReenabled;
         private bool _wasPathShown;
+        private Coroutine _puzzleCoroutine;
         
         private readonly Color _puzzleSolvedColor = new Color(2.27060f, 1.69304f, 0.71760f, 1.00000f);
         private readonly Color _originalColor = new Color(2.31267f, 1.72440f, 0.73089f, 1.00000f);
@@ -202,7 +203,8 @@ namespace Code
             
             StopPuzzleCoroutine();
             
-            yield return StartCoroutine(BeginPuzzleLoop());
+            _puzzleCoroutine = StartCoroutine(BeginPuzzleLoop());
+            yield return _puzzleCoroutine;
             
             _isPathDrawingActive = false;
             _wasPathDrawingCompleted = true;
@@ -212,7 +214,7 @@ namespace Code
         private void StartPuzzleTest()
         {
             StopPuzzleCoroutine();
-            StartCoroutine(BeginPuzzleLoop());
+            _puzzleCoroutine = StartCoroutine(BeginPuzzleLoop());
         }
 
         private IEnumerator BeginPuzzleLoop()
@@ -323,7 +325,13 @@ namespace Code
         [Button]
         private void StopPuzzleCoroutine()
         {
-            StopCoroutine(nameof(BeginPuzzleLoop));    
+            if (_puzzleCoroutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(_puzzleCoroutine);
+            _puzzleCoroutine = null;
         }
 
         private void SetRandomPuzzleRotation()

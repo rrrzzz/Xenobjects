@@ -38,6 +38,9 @@ namespace SplineMesh
         // public float startScale = 2.65f;
         // public float endScale = 0.05f;
 
+        [Tooltip("Route segment MeshBenders through the optimized stretch path: topology written once, " +
+                 "no per-frame allocations, no tangent recalculation. Toggle off to compare with the original path.")]
+        public bool useFastStretch;
         public bool scaleToZeroOnInit = true;
         public bool isCreatingEnabled = true;
         public float centerBoxSize;
@@ -428,7 +431,8 @@ namespace SplineMesh
             var meshRenderer = res.GetComponent<MeshRenderer>();
             meshRenderer.material = material;
             MeshBender mb = res.GetComponent<MeshBender>();
-           
+            mb.UseFastStretch = useFastStretch;
+
             mb.Source = SourceMesh.Build(mesh)
                 .Translate(translation)
                 .Rotate(Quaternion.Euler(rotation))

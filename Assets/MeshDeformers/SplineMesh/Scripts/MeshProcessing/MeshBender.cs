@@ -33,6 +33,8 @@ namespace SplineMesh {
             set {
                 if (value == source) return;
                 SetDirty();
+                // a new source mesh may have a different topology, so the fast path must rewrite it
+                fastTopologySet = false;
                 source = value;
             }
         }
@@ -49,6 +51,26 @@ namespace SplineMesh {
                 mode = value;
             }
         }
+
+        [SerializeField]
+        private bool useFastStretch;
+        /// <summary>
+        /// When enabled, StretchToInterval computes via <see cref="FillStretchFast"/> instead of
+        /// <see cref="FillStretch"/>. Bending math is identical; see FillStretchFast for the differences.
+        /// </summary>
+        public bool UseFastStretch {
+            get { return useFastStretch; }
+            set {
+                if (value == useFastStretch) return;
+                useFastStretch = value;
+                fastTopologySet = false;
+                SetDirty();
+            }
+        }
+
+        private bool fastTopologySet;
+        private readonly List<Vector3> fastPositions = new List<Vector3>();
+        private readonly List<Vector3> fastNormals = new List<Vector3>();
 
         /// <summary>
         /// Sets a curve along which the mesh will be bent.
@@ -138,7 +160,11 @@ namespace SplineMesh {
                     FillRepeat();
                     break;
                 case FillingMode.StretchToInterval:
-                    FillStretch();
+                    if (useFastStretch) {
+                        FillStretchFast();
+                    } else {
+                        FillStretch();
+                    }
                     break;
             }
         }
@@ -319,6 +345,70 @@ namespace SplineMesh {
                 source.Triangles,
                 bentVertices.Select(b => b.position),
                 bentVertices.Select(b => b.normal));
+            if (TryGetComponent(out MeshCollider collider)) {
+                collider.sharedMesh = result;
+            }
+        }
+
+        /// <summary>
+        /// Optimized variant of <see cref="FillStretch"/> for meshes recomputed every frame
+        /// (e.g. while node scales are tweened). The bending math is identical; the differences are:
+        /// - triangles and UVs are written once per source mesh instead of on every compute;
+        /// - positions and normals are written through reused list buffers, so steady-state computes allocate nothing;
+        /// - tangents are not recalculated — use the original path if the material samples tangents (normal maps).
+        /// </summary>
+        private void FillStretchFast() {
+            fastPositions.Clear();
+            fastNormals.Clear();
+            sampleCache.Clear();
+
+            foreach (var vert in source.Vertices) {
+                float distanceRate = source.Length == 0 ? 0 : Math.Abs(vert.position.x - source.MinX) / source.Length;
+                CurveSample sample;
+                if (!sampleCache.TryGetValue(distanceRate, out sample)) {
+                    if (!useSpline) {
+                        sample = curve.GetSampleAtDistance(curve.Length * distanceRate);
+                    } else {
+                        float intervalLength = intervalEnd == 0 ? spline.Length - intervalStart : intervalEnd - intervalStart;
+                        float distOnSpline = intervalStart + intervalLength * distanceRate;
+                        if (distOnSpline > spline.Length) {
+                            distOnSpline = spline.Length;
+                        }
+                        sample = spline.GetSampleAtDistance(distOnSpline);
+                    }
+                    sampleCache[distanceRate] = sample;
+                }
+
+                var bent = sample.GetBent(vert);
+                fastPositions.Add(bent.position);
+                fastNormals.Add(bent.normal);
+            }
+
+            if (!fastTopologySet) {
+                fastTopologySet = true;
+                result.Clear();
+#if UNITY_2017_3_OR_NEWER
+                result.indexFormat = source.Mesh.indexFormat;
+#endif
+                result.MarkDynamic();
+                result.SetVertices(fastPositions);
+                result.SetNormals(fastNormals);
+                result.SetTriangles(source.Triangles, 0);
+                result.SetUVs(0, source.Mesh.uv);
+                result.SetUVs(1, source.Mesh.uv2);
+                result.SetUVs(2, source.Mesh.uv3);
+                result.SetUVs(3, source.Mesh.uv4);
+                result.SetUVs(4, source.Mesh.uv5);
+                result.SetUVs(5, source.Mesh.uv6);
+                result.SetUVs(6, source.Mesh.uv7);
+                result.SetUVs(7, source.Mesh.uv8);
+            } else {
+                result.SetVertices(fastPositions);
+                result.SetNormals(fastNormals);
+            }
+
+            result.RecalculateBounds();
+
             if (TryGetComponent(out MeshCollider collider)) {
                 collider.sharedMesh = result;
             }
