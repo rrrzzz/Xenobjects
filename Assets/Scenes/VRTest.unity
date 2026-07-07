@@ -550,10 +550,13 @@ MonoBehaviour:
   minDistance: 1.5
   movementTrackingInterval: 1
   movementThreshold: 0.2
-  leftStickAction: {fileID: 1010738217276881514, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  singleTouchAction: {fileID: 8435629958814851063, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  doubleTouchAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  shakeThreshold: 2
+  leftStickRotate: {fileID: 8248158260566104461, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  aButtonDoubleTouch: {fileID: 1053250415161379591, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  bButtonSingleTouch: {fileID: -3850358053183117842, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  burstEnterThreshold: 4
+  burstExitThreshold: 1
+  burstWindow: 0.7
+  minBurstsForShake: 3
   shakeCooldown: 0.35
   lowPassTimeConstant: 0.5
   camTr: {fileID: 0}

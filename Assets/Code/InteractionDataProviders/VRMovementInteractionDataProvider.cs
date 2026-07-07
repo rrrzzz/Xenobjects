@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR;
@@ -8,19 +9,26 @@ namespace Code
 {
     public class VRMovementInteractionDataProvider : MovementInteractionProviderBase
     {
-        // Quest reports deviceAcceleration in m/s²; AR's Input.acceleration is in g.
-        // We divide by this so shakeThreshold stays comparable to the AR constant (2.0).
-        private const float StandardGravity = 9.81f;
-
         [Header("Input Actions")]
-        [SerializeField] private InputActionReference leftStickAction;
+        [SerializeField] private InputActionReference rotateAroundXAction;
         [SerializeField] private InputActionReference singleTouchAction;
         [SerializeField] private InputActionReference doubleTouchAction;
 
+        // OpenXR doesn't populate CommonUsages.deviceAcceleration, so we derive shake
+        // from deviceVelocity: a burst is a spike of the velocity above its low-passed
+        // baseline. Several bursts inside a sliding window count as a shake.
         [Header("Shake Detection")]
-        [SerializeField] private float shakeThreshold = 2.0f;
+        [SerializeField] private float burstEnterThreshold = 4f;   // dSq to register a burst
+        [SerializeField] private float burstExitThreshold = 1f;    // dSq to release the burst
+        [SerializeField] private float burstWindow = 0.7f;         // sliding window in seconds
+        [SerializeField] private int minBurstsForShake = 3;
         [SerializeField] private float shakeCooldown = 0.35f;
         [SerializeField] private float lowPassTimeConstant = 0.5f;
+
+        private bool _burstActiveL;
+        private bool _burstActiveR;
+        private readonly Queue<float> _burstTimesL = new Queue<float>();
+        private readonly Queue<float> _burstTimesR = new Queue<float>();
 
         private Vector3 _lowPassLeft;
         private Vector3 _lowPassRight;
@@ -32,9 +40,9 @@ namespace Code
 
         private void OnEnable()
         {
-            if (leftStickAction != null && leftStickAction.action != null)
+            if (rotateAroundXAction != null && rotateAroundXAction.action != null)
             {
-                leftStickAction.action.Enable();
+                rotateAroundXAction.action.Enable();
             }
 
             if (singleTouchAction != null && singleTouchAction.action != null)
@@ -64,9 +72,9 @@ namespace Code
                 doubleTouchAction.action.Disable();
             }
 
-            if (leftStickAction != null && leftStickAction.action != null)
+            if (rotateAroundXAction != null && rotateAroundXAction.action != null)
             {
-                leftStickAction.action.Disable();
+                rotateAroundXAction.action.Disable();
             }
         }
 
@@ -88,7 +96,7 @@ namespace Code
             DoubleTouchEvent.Invoke();
         }
 
-        protected override void UpdatePhoneTiltAngle()
+        protected override void UpdateDeviceTiltAngle()
         {
             var rotNormalized = NormalizeRotationAngles(camTr.rotation.eulerAngles);
             SignedTiltZ01 = Mathf.Clamp(rotNormalized.z, -maxTilt, maxTilt) / maxTilt;
@@ -97,80 +105,104 @@ namespace Code
             // Negate so positive stick-right maps to negative SignedTiltY01, matching the
             // sign produced by the AR provider (NormalizeRotationAngles multiplies by -1).
             var stickX = 0f;
-            if (leftStickAction != null && leftStickAction.action != null)
+            if (rotateAroundXAction != null && rotateAroundXAction.action != null)
             {
-                stickX = leftStickAction.action.ReadValue<Vector2>().x;
+                stickX = rotateAroundXAction.action.ReadValue<Vector2>().x;
             }
             SignedTiltY01 = Mathf.Clamp(-stickX, -1f, 1f);
 
             if (isDebugInfoShown && cameraPosRotTxt)
             {
-                cameraPosRotTxt.text = $"HMD rot: {rotNormalized}\nSignedTiltZ01: {SignedTiltZ01}\nStickX: {stickX:F2}" +
-                                       $"\nSignedTiltY01: {SignedTiltY01}";
+                cameraPosRotTxt.text = $"HMD rot: {rotNormalized}\nSignedTiltZ01: {SignedTiltZ01:F2}\nStickX: {stickX:F2}" +
+                                       $"\nSignedTiltY01: {SignedTiltY01:F2}";
             }
         }
 
-        protected override void UpdateTouchStatus()
-        {
-        }
+        protected override void UpdateTouchStatus() {}
 
         protected override void UpdateShakeStatus()
         {
             EnsureDevices();
 
-            Vector3 la = Vector3.zero;
-            Vector3 ra = Vector3.zero;
+            Vector3 lv = Vector3.zero;
+            Vector3 rv = Vector3.zero;
 
             var hasLeft = _leftDevice.isValid &&
-                          _leftDevice.TryGetFeatureValue(CommonUsages.deviceAcceleration, out la);
+                          _leftDevice.TryGetFeatureValue(CommonUsages.deviceVelocity, out lv);
             var hasRight = _rightDevice.isValid &&
-                           _rightDevice.TryGetFeatureValue(CommonUsages.deviceAcceleration, out ra);
+                           _rightDevice.TryGetFeatureValue(CommonUsages.deviceVelocity, out rv);
 
             var alpha = 1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(lowPassTimeConstant, 1e-4f));
 
             var deltaSqL = 0f;
             if (hasLeft)
             {
-                la /= StandardGravity;
                 if (!_leftPrimed)
                 {
-                    _lowPassLeft = la; 
+                    _lowPassLeft = lv;
                     _leftPrimed = true;
                 }
                 else
                 {
-                    _lowPassLeft = Vector3.Lerp(_lowPassLeft, la, alpha);
+                    _lowPassLeft = Vector3.Lerp(_lowPassLeft, lv, alpha);
                 }
-                deltaSqL = (la - _lowPassLeft).sqrMagnitude;
+                deltaSqL = (lv - _lowPassLeft).sqrMagnitude;
             }
 
             var deltaSqR = 0f;
             if (hasRight)
             {
-                ra /= StandardGravity;
                 if (!_rightPrimed)
                 {
-                    _lowPassRight = ra; 
+                    _lowPassRight = rv;
                     _rightPrimed = true;
                 }
                 else
                 {
-                    _lowPassRight = Vector3.Lerp(_lowPassRight, ra, alpha);
+                    _lowPassRight = Vector3.Lerp(_lowPassRight, rv, alpha);
                 }
-                
-                deltaSqR = (ra - _lowPassRight).sqrMagnitude;
+                deltaSqR = (rv - _lowPassRight).sqrMagnitude;
             }
 
-            var deltaSq = Mathf.Max(deltaSqL, deltaSqR);
-            if (deltaSq < shakeThreshold) return;
-            if (Time.time - _lastShakeTime < shakeCooldown) return;
+            UpdateBurst(deltaSqL, ref _burstActiveL, _burstTimesL);
+            UpdateBurst(deltaSqR, ref _burstActiveR, _burstTimesR);
 
+            var shakingL = _burstTimesL.Count >= minBurstsForShake;
+            var shakingR = _burstTimesR.Count >= minBurstsForShake;
+
+            if (!shakingL && !shakingR)
+                return;
+
+            if (Time.time - _lastShakeTime < shakeCooldown)
+                return;
+            
             _lastShakeTime = Time.time;
+
+            // Clear histories so we don't immediately re-fire on the tail end of the same shake.
+            _burstTimesL.Clear();
+            _burstTimesR.Clear();
+
             ShakeEvent.Invoke();
 
             if (isDebugInfoShown && shakeText)
-            {
                 shakeText.text = "Shake event detected at time " + Time.time;
+        }
+
+        private void UpdateBurst(float deltaSq, ref bool active, Queue<float> times)
+        {
+            while (times.Count > 0 && Time.time - times.Peek() > burstWindow)
+            {
+                times.Dequeue();
+            }
+
+            if (!active && deltaSq > burstEnterThreshold)
+            {
+                active = true;
+                times.Enqueue(Time.time);
+            }
+            else if (active && deltaSq < burstExitThreshold)
+            {
+                active = false;
             }
         }
 

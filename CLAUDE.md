@@ -4,33 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Xenobjects** is a Unity 6 Android AR app that places interactive art objects in the real world via image-marker tracking and animates effects around them. Phone tilt, shake, proximity, and touch all drive the effects.
+**Xenobjects** — Unity 6 (6000.4.5f1) art project. Android AR (phone, marker-based) plus a Quest track (VR prototype now, Quest 3 passthrough AR later). See **ARCHITECTURE.md** for system design, spawning flow, input abstraction, effects system, and dependencies.
 
-- **Unity:** 6000.4.5f1
-- **Platform:** Android (AR Foundation 6.4.2 + ARCore)
-- **VR target:** Meta Quest via OpenXR + XR Interaction Toolkit — prefer the new Input System / XRI actions over `UnityEngine.XR.InputDevices` (many `CommonUsages` features, e.g. `deviceAcceleration`, aren't populated on OpenXR).
-- **Main scene:** `Assets/Scenes/ARScene.unity`
-- **Desktop testing scene:** `Assets/Scenes/MuseumSimulation.unity` (no device needed)
+Build via **File → Build Settings → Android**. No CLI build pipeline or automated tests.
 
-Build via **File → Build Settings → Android** in the Unity Editor. No CLI build pipeline or automated tests.
+## Quest specifics
 
-## Architecture
+- Stack: OpenXR + Meta Quest Support + XRI 3.x + Starter Assets; Input System only (legacy disabled).
+- **Sticks are non-standard: RIGHT = move, LEFT = turn.** Intentional.
+- Locomotion: XR Body Transformer with "Use Character Controller If Exists" (Character Controller Driver is deprecated — don't reintroduce).
 
-### Spawning flow
+### Gotchas already hit
 
-`ArTrackingManager` detects one of three image markers and spawns the matching prefab. `ArCeo` is an alternative spawner using camera color detection (red/green/blue targets) or manual UI buttons. After spawning, `SetArObjectTransform()` links the input provider to the new object and calls `Initialize()` on the object's manager.
+- Oculus Touch Controller Profile must be in OpenXR Interaction Profiles on BOTH Android and Standalone tabs — empty list = dead controllers.
+- Prefer Input System / XRI actions over `UnityEngine.XR.InputDevices`; many `CommonUsages` features aren't populated on OpenXR (`deviceAcceleration` — use `deviceVelocity`).
+- Quest 2 stick drift vs snap-turn reset: Stick Deadzone ~0.25–0.3 on the Turn action.
+- VR UI: World Space canvas only, scale ~0.001.
 
-### Input abstraction (`Assets/Code/InteractionDataProviders/`)
+### Workflow
 
-`MovementInteractionProviderBase` (abstract) reads sensors each frame and exposes normalized values — tilt, yaw, proximity, walking state — plus `UnityEvent`s for shake, single-tap, and double-tap. The concrete AR implementation is `ARMovementInteractionDataProvider` (gyro + accelerometer). `MovementInteractionTestProvider` exists for editor testing without a device.
-
-### Object managers (`Assets/Code/ArObjectManagers/`)
-
-`ArObject1/2/3Manager` each subclass `ArObjectManagerBase`. They read the provider's properties to modulate particle systems, splines, and shader effects. Each tracks a fixed number of interactable steps; once all are triggered, `MovementPathVisualizer` shows the player's walked path.
-
-### Effects system (`Assets/Code/Effects/`)
-
-`EffectBase` (abstract) tweens a shader property on a `Material` between min/max values using DOTween. Subclasses (`OrbGlowingEffect`, `DistortionEffect`, `DissolveEffect`, etc.) declare which property to animate. All shader IDs are cached with `Shader.PropertyToID()`.
+- Primary iteration: Quest Link (USB-C) + editor Play mode. XR Device Simulator when no headset; keep it disabled during Link.
+- On-device builds only for Android-specific features (passthrough, anchors) — Script-Only/Patch build for code-only changes.
+- Frame target: 72 Hz on Quest 2; re-verify at 90/120 on Quest 3.
 
 ## Key dependencies
 

@@ -16,7 +16,7 @@ namespace Code
             _lowPassValue = Input.acceleration;
         }
         
-        protected override void UpdatePhoneTiltAngle()
+        protected override void UpdateDeviceTiltAngle()
         {
             var camRot = camTr.rotation.eulerAngles;
             

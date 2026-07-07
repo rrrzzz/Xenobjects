@@ -56,7 +56,7 @@ namespace Code
         { 
             UpdateMovementStatus();
             UpdateDistanceToObject();
-            UpdatePhoneTiltAngle();
+            UpdateDeviceTiltAngle();
             UpdateTouchStatus();
             UpdateShakeStatus();
         }
@@ -64,7 +64,7 @@ namespace Code
         public void SetPuzzleEnteredRotation()
         {
             _puzzleEnteredYRotation = NormalizeRotationAngles(camTr.rotation.eulerAngles).y;
-            UpdatePhoneTiltAngle();
+            UpdateDeviceTiltAngle();
         }
 
         
@@ -166,7 +166,7 @@ namespace Code
             return rotation * -1;
         }
         
-        protected abstract void UpdatePhoneTiltAngle();
+        protected abstract void UpdateDeviceTiltAngle();
         protected abstract void UpdateTouchStatus();
         protected abstract void UpdateShakeStatus();
     }

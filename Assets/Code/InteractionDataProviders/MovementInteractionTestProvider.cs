@@ -27,7 +27,7 @@ namespace Code
             SetArObjectTransform(arObjectTr, movementPathVisualizer);
         }
 
-        protected override void UpdatePhoneTiltAngle()
+        protected override void UpdateDeviceTiltAngle()
         {
             var camRot = camTr.rotation.eulerAngles;
             if (Input.GetKey(KeyCode.Q))

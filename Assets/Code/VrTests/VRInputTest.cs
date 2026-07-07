@@ -10,8 +10,6 @@ using InputDevice = UnityEngine.XR.InputDevice;
 
 public class VRInputTest : MonoBehaviour
 {
-    private const float StandardGravity = 9.81f;
-
     public Transform arObjectTr;
 
     [Header("Debug")]
@@ -31,9 +29,9 @@ public class VRInputTest : MonoBehaviour
     [SerializeField] private float movementThreshold = 0.2f;
 
     [Header("Input Actions")]
-    [SerializeField] private InputActionReference leftStickAction;
-    [SerializeField] private InputActionReference singleTouchAction;
-    [SerializeField] private InputActionReference doubleTouchAction;
+    [SerializeField] private InputActionReference leftStickRotate;
+    [SerializeField] private InputActionReference aButtonDoubleTouch;
+    [SerializeField] private InputActionReference bButtonSingleTouch;
 
     [Header("Shake Detection")]
     [SerializeField] private float burstEnterThreshold = 4f;   // dSq to register a burst
@@ -81,41 +79,41 @@ public class VRInputTest : MonoBehaviour
 
     private void OnEnable()
     {
-        if (leftStickAction != null && leftStickAction.action != null)
+        if (leftStickRotate != null && leftStickRotate.action != null)
         {
-            leftStickAction.action.Enable();
+            leftStickRotate.action.Enable();
         }
 
-        if (singleTouchAction != null && singleTouchAction.action != null)
+        if (bButtonSingleTouch != null && bButtonSingleTouch.action != null)
         {
-            singleTouchAction.action.performed += OnSingleTouchPerformed;
-            singleTouchAction.action.Enable();
+            bButtonSingleTouch.action.performed += OnSingleTouchPerformed;
+            bButtonSingleTouch.action.Enable();
         }
 
-        if (doubleTouchAction != null && doubleTouchAction.action != null)
+        if (aButtonDoubleTouch != null && aButtonDoubleTouch.action != null)
         {
-            doubleTouchAction.action.performed += OnDoubleTouchPerformed;
-            doubleTouchAction.action.Enable();
+            aButtonDoubleTouch.action.performed += OnDoubleTouchPerformed;
+            aButtonDoubleTouch.action.Enable();
         }
     }
 
     private void OnDisable()
     {
-        if (singleTouchAction != null && singleTouchAction.action != null)
+        if (bButtonSingleTouch != null && bButtonSingleTouch.action != null)
         {
-            singleTouchAction.action.performed -= OnSingleTouchPerformed;
-            singleTouchAction.action.Disable();
+            bButtonSingleTouch.action.performed -= OnSingleTouchPerformed;
+            bButtonSingleTouch.action.Disable();
         }
 
-        if (doubleTouchAction != null && doubleTouchAction.action != null)
+        if (aButtonDoubleTouch != null && aButtonDoubleTouch.action != null)
         {
-            doubleTouchAction.action.performed -= OnDoubleTouchPerformed;
-            doubleTouchAction.action.Disable();
+            aButtonDoubleTouch.action.performed -= OnDoubleTouchPerformed;
+            aButtonDoubleTouch.action.Disable();
         }
 
-        if (leftStickAction != null && leftStickAction.action != null)
+        if (leftStickRotate != null && leftStickRotate.action != null)
         {
-            leftStickAction.action.Disable();
+            leftStickRotate.action.Disable();
         }
     }
 
@@ -208,9 +206,9 @@ public class VRInputTest : MonoBehaviour
         TiltZ01 = Mathf.Abs(SignedTiltZ01);
 
         var stickX = 0f;
-        if (leftStickAction != null && leftStickAction.action != null)
+        if (leftStickRotate != null && leftStickRotate.action != null)
         {
-            stickX = leftStickAction.action.ReadValue<Vector2>().x;
+            stickX = leftStickRotate.action.ReadValue<Vector2>().x;
         }
         SignedTiltY01 = Mathf.Clamp(-stickX, -1f, 1f);
 
@@ -328,4 +326,6 @@ public class VRInputTest : MonoBehaviour
             _rightPrimed = false;
         }
     }
+
+    
 }
