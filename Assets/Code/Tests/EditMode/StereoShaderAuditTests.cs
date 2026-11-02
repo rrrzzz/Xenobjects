@@ -51,6 +51,11 @@ namespace Code.Tests
             if (Regex.IsMatch(source, "\\bGrabPass\\b") && !source.Contains("UNITY_DECLARE_SCREENSPACE_TEXTURE"))
                 return "GrabPass sampled without UNITY_DECLARE_SCREENSPACE_TEXTURE";
 
+            // In stereo the depth texture is an array; SAMPLE_DEPTH_TEXTURE then needs its sampler,
+            // which only UNITY_DECLARE_DEPTH_TEXTURE declares (fails to compile on Quest otherwise).
+            if (Regex.IsMatch(source, "sampler2D(_float)?\\s+_CameraDepthTexture\\s*;"))
+                return "_CameraDepthTexture declared as sampler2D instead of UNITY_DECLARE_DEPTH_TEXTURE";
+
             var hasProgram = Regex.IsMatch(source, "CGPROGRAM|HLSLPROGRAM");
             var isSurface = Regex.IsMatch(source, "#pragma\\s+surface\\b");
             if (!hasProgram || isSurface)
