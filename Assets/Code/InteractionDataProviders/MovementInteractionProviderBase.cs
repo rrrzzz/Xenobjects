@@ -1,4 +1,3 @@
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -70,22 +69,14 @@ namespace Code
         
         public bool TryGetParamValue(out float[] val)
         {
-            val = new float[]{0,0,0,0,0};
+            val = new float[] { 0, 0, 0, 0, 0 };
 
-            if (paramField)
+            if (!paramField)
             {
-                // Split the string by commas
-                string[] parts = paramField.text.Split(',');
-
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    val[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
-                }
-                
-                return true;
+                return false;
             }
-        
-            return false;
+
+            return InteractionUtils.TryParseFloats(paramField.text, val);
         }
 
         public bool GetForwardRayHit(out RaycastHit hit)
@@ -154,16 +145,7 @@ namespace Code
         
         protected static Vector3 NormalizeRotationAngles(Vector3 rotation)
         {
-            if (rotation.x > 180)
-                rotation.x -= 360;
-
-            if (rotation.y > 180)
-                rotation.y -= 360;
-            
-            if (rotation.z > 180)
-                rotation.z -= 360;
-            
-            return rotation * -1;
+            return InteractionUtils.NormalizeRotationAngles(rotation);
         }
         
         protected abstract void UpdateDeviceTiltAngle();

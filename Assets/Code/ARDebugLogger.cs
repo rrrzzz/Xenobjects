@@ -22,24 +22,22 @@ public class ARDebugLogger : MonoBehaviour
     public void PrintDebugMessage(string message)
     {
         logQueue.Enqueue(message);
-        if (logQueue.Count > maxLines)
-        {
-            logQueue.Dequeue();
-        }
-
-        consoleOutput.text = string.Join("\n", logQueue);
+        TrimAndDisplay();
     }
 
     void HandleLog(string logString, string stackTrace, LogType type)
     {
         if (type != LogType.Error)
             return;
- 
+
         logQueue.Enqueue(logString);
         logQueue.Enqueue(stackTrace);
-        
+        TrimAndDisplay();
+    }
 
-        if (logQueue.Count > maxLines)
+    private void TrimAndDisplay()
+    {
+        while (logQueue.Count > maxLines)
         {
             logQueue.Dequeue();
         }

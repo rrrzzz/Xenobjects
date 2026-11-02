@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -52,15 +51,11 @@ namespace Code
         private readonly Color _defCrosshairColor = Color.white;
         private readonly Color _targetCapturedColor = Color.red;
         private Transform _phoneTransform;
-        private bool _isCapturingImage;
-        private bool _isFirstCapture;
         private float _horizontalCheckStartTime;
         private bool _checkingIfSeeingTarget;
         private bool _isTargetFound;
-        private List<ARRaycastHit> _planeHits = new List<ARRaycastHit>();
-        private int _currentTestingFunctionalityIdx;
+        private readonly List<ARRaycastHit> _planeHits = new List<ARRaycastHit>();
         private bool _hasCheckedCross;
-        private bool _isSpawned;
         private bool _isManualMode;
         private bool _isPhoneHorizontal;
         private bool _isAlignedWithCrosshair;
@@ -231,18 +226,8 @@ namespace Code
             }
 
             anchorRotationText.text = "Phone aligned, waiting for tap";
-            
-            if (_isManualMode)
-            {
-                if (Input.touchCount == 1)
-                {
-                    _hasCheckedCross = true;
-                    colorAnalyzer.TryDetermineCenteredAtCross();
-                    return;
-                }
-            }
-            
-            if (!_isManualMode && Time.realtimeSinceStartup - _crossCheckStartTime >= crossCheckInterval)
+
+            if (Time.realtimeSinceStartup - _crossCheckStartTime >= crossCheckInterval)
             {
                 _crossCheckStartTime = Time.realtimeSinceStartup;
                 _hasCheckedCross = true;
@@ -366,11 +351,6 @@ namespace Code
 
             var currentAimingThreshold = crosshairAimingThreshold;
 
-            // if (TryGetParamValue(inputFloats, out var val))
-            // {
-            //     currentAimingThreshold = val[1] == 0 ? crosshairAimingThreshold : val[1];
-            // }
-            //
             var isXCaptured = xError < currentAimingThreshold;
             var isYCaptured = yError < currentAimingThreshold;
             
@@ -398,11 +378,6 @@ namespace Code
 
             var currentThreshold = horizontalThreshold;
 
-            // if (TryGetParamValue(inputFloats, out var val))
-            // {
-            //     currentThreshold = val[1] == 0 ? horizontalThreshold : val[1];
-            // }
-
             var isXHorizontal = xError < currentThreshold;
             var isYHorizontal = yError < currentThreshold;
             
@@ -419,49 +394,32 @@ namespace Code
         
         private Vector3 NormalizeRotationAngles(Vector3 rotation)
         {
-            if (rotation.x > 180)
-                rotation.x -= 360;
-
-            if (rotation.y > 180)
-                rotation.y -= 360;
-            
-            if (rotation.z > 180)
-                rotation.z -= 360;
-            
-            return rotation * -1;
+            return InteractionUtils.NormalizeRotationAngles(rotation);
         }
-        
+
         void AttachAnchorToTrackable(ARPlane plane, ARRaycastHit hit)
         {
             if (_currentAnchor)
             {
-                DestroyImmediate(_currentAnchor.gameObject);
+                Destroy(_currentAnchor.gameObject);
             }
             _currentAnchor = anchorManager.AttachAnchor(plane, hit.pose);
-            
+
             Vector3 offset = _phoneTransform.up * 0.3f;
-            
+
             Quaternion rotation = chosenPrefab.transform.rotation;
-            // if (TryGetParamValue(inputFloats, out var val))
-            // {
-            //     offset += _currentAnchor.transform.up * val[0];
-            //     if (val[1] != 0)
-            //     {
-            //         rotation = Quaternion.Euler(0, val[1], 0);
-            //     }
-            // }
 
             movementPathVisualizer.enabled = true;
-                
+
             if (_currentPrefab)
             {
-                DestroyImmediate(_currentPrefab);
+                Destroy(_currentPrefab);
             }
             else
             {
                 movementPathVisualizer.Initialize();
             }
-            
+
             movementPathVisualizer.RestartTracking();
 
             _currentPrefab = Instantiate(chosenPrefab, _currentAnchor.transform.position + offset, rotation,
@@ -477,106 +435,14 @@ namespace Code
 
         public bool TryGetParamValue(TMP_InputField paramField, out float[] val)
         {
-            val = new float[]{0,0,0,0,0};
+            val = new float[] { 0, 0, 0, 0, 0 };
 
-            if (paramField)
+            if (!paramField)
             {
-                // Split the string by commas
-                string[] parts = paramField.text.Split(',');
-                if (string.IsNullOrEmpty(parts[0]))
-                {
-                    return false;
-                }
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    val[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
-                }
-                
-                return true;
+                return false;
             }
-            
-            return false;
-        }
-        
-        private void TestFunctionalityById()
-        {
-            var previousTestingFunctionalityIdx = _currentTestingFunctionalityIdx;
-            // _currentTestingFunctionalityIdx = TryGetParamValue(inputFloats, out var val) ? (int)val[0] : 0;
-            
-            switch (_currentTestingFunctionalityIdx)
-            {
-                case 0:
-                    anchorRotationText.text = "No testing functionality selected";
-                    return;
-                case 1:
-                {
-                    var isApproxHorizontal = CheckPhoneApproximatelyHorizontal();
-                    anchorRotationText.text += "\nPhone is approx horizontal: " + isApproxHorizontal;
-                    return;
-                }
-                case 2:
-                {
-                    var isAligned = CheckPhoneAlignedWithCrosshair();
-                    anchorRotationText.text += "\nPhone is aligned with crosshair: " + isAligned;
-                    return;
-                }
-                case 3:
-                {
-                    if (colorAnalyzer.isProcessingImage)
-                    {
-                        if (anchorRotationText.text.Contains("Processing image"))
-                        {
-                            return;
-                        }
-                        anchorRotationText.text += " Processing image";
-                    }
-                
-                    if (colorAnalyzer.isProcessingSuccess)
-                    {
-                        anchorRotationText.text = "Color detected: " + colorAnalyzer.dominantColor;
-                        return;
-                    }
-                
-                    if (Input.touchCount == 2)
-                    {
-                        var touch = Input.GetTouch(0);
-                        if (touch.phase != TouchPhase.Began) 
-                            return;
-                        
-                        anchorRotationText.text = "Capturing image";
-                        colorAnalyzer.TryCaptureImage();
-                    }
-                    return;
-                }
-                case 4:
-                {
-                    if (previousTestingFunctionalityIdx != _currentTestingFunctionalityIdx)
-                    {
-                        _planeWasAdded = false;
-                    }
-                
-                    if (!_planeWasAdded)
-                    {
-                        raycastManager.Raycast(_screenCenter, _planeHits, TrackableType.Planes);
-                        if (_planeHits.Count != 0)
-                        {
-                            anchorRotationText.text = "Plane found";
 
-                            _planeWasAdded = true;
-                            planeScanTip.SetActive(false);
-                        }
-                        else
-                        {
-                            anchorRotationText.text = "No plane, showing tip";
-                            planeScanTip.SetActive(true);
-                        }
-                        return;
-                    }
-                    return;
-                }
-                default:
-                    return;
-            }
+            return InteractionUtils.TryParseFloats(paramField.text, val);
         }
     }
 }

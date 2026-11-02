@@ -56,13 +56,8 @@ namespace Code
          
         private ParticleSystem[] _particleSystems;
         private bool _isChangingAlpha = true;
-        
-        private int _usedInteractableElementsCount;
-        private bool _wasBloodToggleUsed;
-        private bool _wasTornadoFaded;
-        private bool _wasTornadoChangedByDistance;
-        private bool _wasEffectDisabledByStanding;
-        private bool _wasPathShown;
+
+        protected override int InteractableElementsTotal => InteractableElementsCount;
 
         public override void Initialize(MovementInteractionProviderBase dataProvider, MovementPathVisualizer pathVisualizer)
         {
@@ -76,11 +71,7 @@ namespace Code
 
         private void OnSingleTouch()
         {
-            if (!_wasBloodToggleUsed)
-            {
-                _wasBloodToggleUsed = true;
-                _usedInteractableElementsCount++;
-            }
+            MarkInteractableUsed("blood-toggle");
             isBloodRotating = !isBloodRotating;
 
             if (!isBloodRotating)
@@ -90,9 +81,18 @@ namespace Code
                 return;
             }
 
+            KillBloodTweens();
+        }
+
+        private void KillBloodTweens()
+        {
             if (_bloodTweenA != null)
             {
                 _bloodTweenA.Kill();
+            }
+
+            if (_bloodTweenC != null)
+            {
                 _bloodTweenC.Kill();
             }
         }
@@ -118,22 +118,17 @@ namespace Code
                 bloodSystemC.Rotate(Vector3.up, -bloodRotationAngles * Time.deltaTime, Space.World);
             }
             
-            if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
-            {
-                _wasPathShown = true;
-                PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
-            }
-            
+            TryShowPathWhenAllInteractablesUsed();
+
             if (timePassed > tornadoFadeDelay)
             {
-                var tornadoFadingTime = timePassed - tornadoFadeDelay; 
+                var tornadoFadingTime = timePassed - tornadoFadeDelay;
                 if (tornadoFadingTime <= 2)
                 {
                     var t = tornadoFadingTime / 2;
-                    if (!_wasTornadoFaded && t >= .5f)
+                    if (t >= .5f)
                     {
-                        _usedInteractableElementsCount++;
-                        _wasTornadoFaded = true;
+                        MarkInteractableUsed("tornado-faded");
                     }
                     var alpha = Mathf.Lerp(1, 0.04f, t);
                     var currentCol = _tornadoMat.GetColor(TintColorId);
@@ -163,38 +158,25 @@ namespace Code
                 _isChangingAlpha = true;
             }
             
-            if (!_wasTornadoChangedByDistance && t >= .3f)
+            if (t >= .3f)
             {
-                _usedInteractableElementsCount++;
-                _wasTornadoChangedByDistance = true;
+                MarkInteractableUsed("tornado-distance");
             }
-            
+
             tornadoTransform.localScale = Vector3.Lerp(_tornadoInitScale, _tornadoFinalScale, t);
             tornadoTransform.localPosition = Vector3.Lerp(_tornadoInitPos, _tornadoFinalPos, t);
         }
 
         private void UpdateParticleSystemsVisibilityByMovement()
         {
-            // if (DataProvider.IsMoving && DataProvider.MovementDuration > movingDurationMax)
-            // {
-            //     return;
-            // }
-            //
-            // if (!DataProvider.IsMoving && DataProvider.IdleDuration > idleDurationMax)
-            // {
-            //     return;
-            // }
-            //
-            
-            var t = DataProvider.IsMoving ? Mathf.InverseLerp(0, movingDurationMax, DataProvider.MovementDuration) : 
+            var t = DataProvider.IsMoving ? Mathf.InverseLerp(0, movingDurationMax, DataProvider.MovementDuration) :
                 Mathf.InverseLerp(0, idleDurationMax, DataProvider.IdleDuration);
-            
-            if (!_wasEffectDisabledByStanding && t >= .5f)
+
+            if (t >= .5f)
             {
-                _usedInteractableElementsCount++;
-                _wasEffectDisabledByStanding = true;
+                MarkInteractableUsed("visibility-by-movement");
             }
-            
+
             UpdateAlphaColorParticleSystems(t, DataProvider.IsMoving);
             UpdateMaterialAlphaParticleSystems(t, DataProvider.IsMoving);
         }
@@ -219,12 +201,18 @@ namespace Code
 
         private void UpdateMaterialAlphaParticleSystems(float t, bool isMoving)
         {
-            // var tornadoAlpha = isMoving ? Mathf.Lerp(TornadoStart, TornadoMin, t) : Mathf.Lerp(TornadoStart, TornadoMax, t);
-            //
-            // _tornadoMat.SetColor(TornadoTint, new Vector4(128 / 255f, 128 / 255f, 128 / 255f, tornadoAlpha / 255f));
-            
             var gasAlpha = isMoving ? Mathf.Lerp(75, 0, t) : Mathf.Lerp(75, 255, t);
             _gasMat.SetColor(GasColorId, new Vector4(154 / 255f, 154 / 255f, 154 / 255f, gasAlpha / 255f));
+        }
+
+        private void OnDestroy()
+        {
+            KillBloodTweens();
+
+            if (DataProvider)
+            {
+                DataProvider.SingleTouchEvent.RemoveListener(OnSingleTouch);
+            }
         }
     }
 }

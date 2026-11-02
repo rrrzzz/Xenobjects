@@ -6,10 +6,14 @@ namespace Code
     {
         private const float ShakeDetectionThreshold = 2.0f;
         private const float TouchTimeThreshold = 0.2f;
-        private const float LowPassFilterFactor = 0.0166f;
-        
+        // Equivalent to the old per-frame lerp factor of 0.0166 at 60 fps,
+        // but framerate-independent (see UpdateShakeStatus).
+        private const float LowPassTimeConstant = 1f;
+        private const float ShakeCooldown = 0.35f;
+
         private Vector3 _lowPassValue;
-        
+        private float _lastShakeTime = float.NegativeInfinity;
+
         protected override void Awake()
         {
             base.Awake();
@@ -73,42 +77,27 @@ namespace Code
         protected override void UpdateShakeStatus()
         {
             var acceleration = Input.acceleration;
-            _lowPassValue = Vector3.Lerp(_lowPassValue, acceleration, LowPassFilterFactor);
+            var alpha = 1f - Mathf.Exp(-Time.deltaTime / LowPassTimeConstant);
+            _lowPassValue = Vector3.Lerp(_lowPassValue, acceleration, alpha);
             var deltaAcceleration = acceleration - _lowPassValue;
 
-            if (deltaAcceleration.sqrMagnitude >= ShakeDetectionThreshold)
+            if (deltaAcceleration.sqrMagnitude < ShakeDetectionThreshold)
             {
-                ShakeEvent.Invoke();
-                if (isDebugInfoShown && shakeText)
-                {
-                    shakeText.text = "Shake event detected at time " + Time.time;
-                }
+                return;
+            }
+
+            if (Time.time - _lastShakeTime < ShakeCooldown)
+            {
+                return;
+            }
+
+            _lastShakeTime = Time.time;
+            ShakeEvent.Invoke();
+
+            if (isDebugInfoShown && shakeText)
+            {
+                shakeText.text = "Shake event detected at time " + Time.time;
             }
         }
-
-        // private void UpdateTouchStatusDebug()
-        // {
-        //     if (Input.touchCount == 2)
-        //     {
-        //         var touch1 = Input.GetTouch(0);
-        //         var touch2 = Input.GetTouch(1);
-        //
-        //         if (touch1.phase == TouchPhase.Began && touch2.phase == TouchPhase.Began)
-        //         {
-        //             float timeDifference = Mathf.Abs(touch1.deltaTime - touch2.deltaTime);
-        //
-        //             if (timeDifference < TouchTimeThreshold)
-        //             {
-        //                 isDoubleTouchDetected = true;
-        //                 // Two-finger touch detected
-        //                 titlTxt.text = "Two-finger touch detected!";
-        //             }
-        //         }
-        //     }
-        //     else if (Input.touchCount == 1)
-        //     {
-        //         titlTxt.text = "Two-finger touch NOT detected!";
-        //     }
-        // }
     }
 }

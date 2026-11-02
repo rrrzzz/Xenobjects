@@ -41,23 +41,18 @@ public class ArObject3Manager : ArObjectManagerBase
     
     public RotateAroundObjectToRayCircleIntersection rotationScript;
 
+    private const float GlowColorHMin = 360;
+    private const float GlowColorHMax = 179;
+    private static readonly int TintColorId = Shader.PropertyToID("_TintColor");
+
     private float _startTime;
     private Material _coloredFlameMat;
-    
-    private readonly float _glowColorHMin = 360;
-    private readonly float _glowColorHMax = 179;
-    private readonly int _smokeTintColor = Shader.PropertyToID("_TintColor");
     private float _coloredFlameAlpha;
     private readonly Stopwatch _oscillationTimer = new Stopwatch();
     private bool _isOscillating;
     private bool _isEndingOscillation;
-    
-    private int _usedInteractableElementsCount;
-    private bool _wasTentacleMoved;
-    private bool _wasSmokeChanged;
-    private bool _wasPhoneRotated;
-    private bool _wasTouchToggleUsed;
-    private bool _wasPathShown;
+
+    protected override int InteractableElementsTotal => InteractableElementsCount;
 
     public override void Initialize(MovementInteractionProviderBase dataProvider, MovementPathVisualizer pathVisualizer)
     {
@@ -67,7 +62,7 @@ public class ArObject3Manager : ArObjectManagerBase
         rotationScript.radius = rotationRadius;
         _startTime = Time.realtimeSinceStartup;
         _coloredFlameMat = coloredFlamePs.GetComponent<Renderer>().material;
-        _coloredFlameAlpha = _coloredFlameMat.GetColor(_smokeTintColor).a;
+        _coloredFlameAlpha = _coloredFlameMat.GetColor(TintColorId).a;
     }
 
     private void Update()
@@ -92,42 +87,23 @@ public class ArObject3Manager : ArObjectManagerBase
         
         if (DataProvider.IdleDuration > idleDurationThreshold && !rotationScript.isRotating)
         {
-            if (!_wasTentacleMoved)
-            {
-                _wasTentacleMoved = true;
-                _usedInteractableElementsCount++;
-            }
-            
+            MarkInteractableUsed("tentacle-moved");
             rotationScript.RotateToTargetAngle(DataProvider.camTr.position);
         }
-        
-        if (!_wasPathShown && InteractableElementsCount == _usedInteractableElementsCount)
-        {
-            _wasPathShown = true;
-            PathVisualizer.StartCoroutine(PathVisualizer.ShowPathAfterDelay());
-        }
 
-        //TODO remove when set
-        // if (DataProvider.TryGetParamValue(out var transformData) && transformData[0] != 0)
-        // {
-        //     rotationScript.radius = transformData[0];
-        // }
+        TryShowPathWhenAllInteractablesUsed();
     }
 
     private void UpdateColoredFlameAndCoreGlow()
     {
-        var currentColor = Mathf.Lerp(_glowColorHMin, _glowColorHMax, DataProvider.TiltZ01);
+        var currentColor = Mathf.Lerp(GlowColorHMin, GlowColorHMax, DataProvider.TiltZ01);
         Color rgb;
-        
+
         if (currentColor >= ColorFromWhiteThreshold)
         {
-            if (!_wasPhoneRotated)
-            {
-                _wasPhoneRotated = true;
-                _usedInteractableElementsCount++;
-            }
-            
-            var saturation = 1 - (_glowColorHMin - currentColor) / (_glowColorHMin - ColorFromWhiteThreshold);
+            MarkInteractableUsed("phone-rotated");
+
+            var saturation = 1 - (GlowColorHMin - currentColor) / (GlowColorHMin - ColorFromWhiteThreshold);
             if (saturation <= 0.3)
             {
                 saturation = 0;
@@ -148,19 +124,13 @@ public class ArObject3Manager : ArObjectManagerBase
         main.startColor = 
             new ParticleSystem.MinMaxGradient(rgb);
         rgb.a = _coloredFlameAlpha;
-        
-        _coloredFlameMat.SetColor(_smokeTintColor, rgb);
+
+        _coloredFlameMat.SetColor(TintColorId, rgb);
     }
-    
+
     private void OnSingleTouch()
     {
-        // UpdateSmokeByDistance(smokePs);
-        
-        if (!_wasTouchToggleUsed)
-        {
-            _wasTouchToggleUsed = true;
-            _usedInteractableElementsCount++;
-        }
+        MarkInteractableUsed("touch-toggle");
         ToggleOscillatingEffect();
     }
 
@@ -190,21 +160,20 @@ public class ArObject3Manager : ArObjectManagerBase
         }
     }
     
-    private void UpdateSmokeByDistance(ParticleSystem snowPs)
+    private void UpdateSmokeByDistance(ParticleSystem smoke)
     {
         var t = Mathf.InverseLerp(smokeDistanceMin, smokeDistanceMax, DataProvider.DistanceToArObjectRaw);
-        
-        if (!_wasSmokeChanged && t >= .3f)
+
+        if (t >= .3f)
         {
-            _wasSmokeChanged = true;
-            _usedInteractableElementsCount++;
+            MarkInteractableUsed("smoke-distance");
         }
-        
+
         var lifetime = Mathf.Lerp(SmokeMinLifetime, SmokeMaxLifetime, t);
         var particleCount = Mathf.Lerp(SmokeMinParticles, SmokeMaxParticles, t);
         var size = Mathf.Lerp(SmokeMinStartSize, SmokeMaxStartSize, t);
-        var main = snowPs.main;
-           
+        var main = smoke.main;
+
         var startSize = new ParticleSystem.MinMaxCurve(SmokeDefStartSize, size);
         var lifetimeCurve = new ParticleSystem.MinMaxCurve(SmokeDefLifetime, lifetime);
         main.startSize = startSize;
@@ -224,6 +193,14 @@ public class ArObject3Manager : ArObjectManagerBase
         else
         {
             _isEndingOscillation = true;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (DataProvider)
+        {
+            DataProvider.SingleTouchEvent.RemoveListener(OnSingleTouch);
         }
     }
 }

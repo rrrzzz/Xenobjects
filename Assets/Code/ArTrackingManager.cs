@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Code;
 using TMPro;
 using UnityEngine;
@@ -25,13 +26,25 @@ public class ArTrackingManager : MonoBehaviour
     private GameObject _currentPrefab;
     private ARTrackedImage _currentTrackedImg;
     private string _currentTrackedName;
-    
-    private Vector3 _object1Offset = new Vector3(0f, 0.01f, 0.18f);
-    private Vector3 _object2Offset = new Vector3(0.005f, -0.01f, 0.28f);
-    private Vector3 _object3Offset = new Vector3(-0.015f, 0.005f, 0.215f);
-    
+
+    private readonly Vector3 _object1Offset = new Vector3(0f, 0.01f, 0.18f);
+    private readonly Vector3 _object2Offset = new Vector3(0.005f, -0.01f, 0.28f);
+    private readonly Vector3 _object3Offset = new Vector3(-0.015f, 0.005f, 0.215f);
+
+    private Dictionary<string, (GameObject prefab, Vector3 offset)> _markerContent;
+
+    private void Awake()
+    {
+        _markerContent = new Dictionary<string, (GameObject prefab, Vector3 offset)>
+        {
+            { Object1TrackedImgName, (arObject1Prefab, _object1Offset) },
+            { Object2TrackedImgName, (arObject2Prefab, _object2Offset) },
+            { Object3TrackedImgName, (arObject3Prefab, _object3Offset) }
+        };
+    }
+
     private void OnEnable()
-    { 
+    {
         trackedImgManager.trackablesChanged.AddListener(OnChanged);
         dataProvider.DoubleTouchEvent.AddListener(RespawnObject);
     }
@@ -52,24 +65,19 @@ public class ArTrackingManager : MonoBehaviour
 
         imageRecognizedEvent.Invoke(_currentTrackedName);
 
-        if (_currentTrackedName == Object1TrackedImgName)
-            _currentPrefab = arObject1Prefab;
-        else if (_currentTrackedName == Object2TrackedImgName)
-            _currentPrefab = arObject2Prefab;
-        else if (_currentTrackedName == Object3TrackedImgName)
-            _currentPrefab = arObject3Prefab;
+        if (!_markerContent.TryGetValue(_currentTrackedName, out var content) || !content.prefab)
+        {
+            Debug.LogWarning($"No prefab mapped to tracked image '{_currentTrackedName}', nothing spawned.");
+            return;
+        }
+
+        _currentPrefab = content.prefab;
 
         if (spawnedContent)
-            DestroyImmediate(spawnedContent);
+            Destroy(spawnedContent);
 
-        Vector3 offsetPos = _currentTrackedImg.transform.position;
-
-        if (_currentTrackedName == Object1TrackedImgName)
-            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object1Offset);
-        else if (_currentTrackedName == Object2TrackedImgName)
-            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object2Offset);
-        else if (_currentTrackedName == Object3TrackedImgName)
-            offsetPos += GetWorldOffset(_currentTrackedImg.transform, _object3Offset);
+        Vector3 offsetPos = _currentTrackedImg.transform.position +
+                            GetWorldOffset(_currentTrackedImg.transform, content.offset);
 
         spawnedContent = Instantiate(
             _currentPrefab,
@@ -85,12 +93,13 @@ public class ArTrackingManager : MonoBehaviour
 
     private void RespawnObject()
     {
-        if (_currentTrackedImg == null)
+        if (_currentTrackedImg == null || !_currentPrefab)
             return;
 
         if (dataProvider.TryGetParamValue(out var transformData))
         {
-            DestroyImmediate(spawnedContent);
+            if (spawnedContent)
+                Destroy(spawnedContent);
 
             var x = transformData[0] * _currentTrackedImg.transform.right;
             var y = transformData[1] * _currentTrackedImg.transform.up;
@@ -130,7 +139,7 @@ public class ArTrackingManager : MonoBehaviour
 
     private void Update()
     {
-        if (_currentTrackedImg)
+        if (_currentTrackedImg && imagePosRotTxt)
         {
             imagePosRotTxt.text =
                 $"img pos: {_currentTrackedImg.transform.position}" +

@@ -15,7 +15,7 @@ public class RadialSpawner : MonoBehaviour
 
     private void OnDisable()
     {
-        trackedImgManager.trackablesChanged.AddListener(OnChanged);
+        trackedImgManager.trackablesChanged.RemoveListener(OnChanged);
     }
 
     private void OnChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
