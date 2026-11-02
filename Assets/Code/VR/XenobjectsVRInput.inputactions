@@ -1,0 +1,137 @@
+{
+    "version": 1,
+    "name": "XenobjectsVRInput",
+    "maps": [
+        {
+            "name": "Xenobjects VR",
+            "id": "c0e7948a-7357-4319-b943-bc445f4e5ba9",
+            "actions": [
+                {
+                    "name": "Puzzle Rotate",
+                    "type": "Value",
+                    "id": "a382221b-af3d-40d0-af44-e620df281c3d",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Single Touch",
+                    "type": "Button",
+                    "id": "484b7088-3577-46c0-ac26-5684e78eb81d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Double Touch",
+                    "type": "Button",
+                    "id": "c442d9a9-b8d3-4b0a-9345-ce42cbec45b6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Left Hand Position",
+                    "type": "Value",
+                    "id": "514e86b7-52af-459a-a00e-f82bd49ab9b0",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Right Hand Position",
+                    "type": "Value",
+                    "id": "5158b154-6fe2-4bd1-b0d0-99040d71be2d",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "0675bd65-68d6-42e9-b874-df8501b06b9f",
+                    "path": "<XRController>{LeftHand}/{Primary2DAxis}",
+                    "interactions": "",
+                    "processors": "StickDeadzone(min=0.25)",
+                    "groups": "",
+                    "action": "Puzzle Rotate",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "55801f72-4b5c-4cab-941c-537d6394bdf1",
+                    "path": "<XRController>{RightHand}/{TriggerButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Single Touch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "86bf5f95-950c-4eda-abb0-ae04eb60e09a",
+                    "path": "<XRController>{LeftHand}/{TriggerButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Single Touch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c9a706-81e8-41dc-ae7d-41c5e80e4a67",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Single Touch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c0b241a0-2bba-4068-9c0b-2b75b86e9043",
+                    "path": "<XRController>{RightHand}/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Double Touch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "92ce73e8-c52b-4250-bb37-823b04205326",
+                    "path": "<XRController>{LeftHand}/devicePosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left Hand Position",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "04f47b0b-2ec6-4fbc-8dad-5d08894dacb7",
+                    "path": "<XRController>{RightHand}/devicePosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right Hand Position",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

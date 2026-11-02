@@ -14,7 +14,12 @@ public class InspectorFreezeFix
         Selection.selectionChanged += OnSelectionChanged;
     }
     
+#if UNITY_6000_6_OR_NEWER
+    // Unity 6000.6 turned Object.GetInstanceID() into a compile error; EntityId replaces it.
+    private static EntityId _lastInitialEditorId;
+#else
     private static int _lastInitialEditorId;
+#endif
 
     private static void OnSelectionChanged() {
         if (!EditorCodePatcher.config.enableInspectorFreezeFix) {
@@ -56,8 +61,12 @@ public class InspectorFreezeFix
                     continue;
                 }
                 
+#if UNITY_6000_6_OR_NEWER
+                var first = editors[0].GetEntityId();
+#else
                 var first = editors[0].GetInstanceID();
-                if (_lastInitialEditorId == first) {
+#endif
+                if (_lastInitialEditorId.Equals(first)) {
                     // This forces the tracker to be rebuilt
                     var m = inspectorType.GetMethod("RefreshInspectors", BindingFlags.Static | BindingFlags.NonPublic);
                     if (m == null) {

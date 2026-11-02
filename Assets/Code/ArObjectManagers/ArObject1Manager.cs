@@ -165,7 +165,7 @@ namespace Code
 
             var firstNodePos = highResMiddleTentacleSpline.GetGlobalNodePos(0);
 
-            while (Vector3.Distance(DataProvider.camTr.position, firstNodePos) > playerToPathNodeDistanceThreshold * 1.5f)
+            while (InteractionUtils.DistanceToNearest(firstNodePos, DataProvider.PathTrackers) > playerToPathNodeDistanceThreshold * 1.5f)
             {
                 yield return null;
             }
@@ -177,7 +177,7 @@ namespace Code
                 yield return null;
             }
 
-            highResMiddleTentacleSpline.InitVanishing(DataProvider.camTr, playerToPathNodeDistanceThreshold);
+            highResMiddleTentacleSpline.InitVanishing(DataProvider.PathTrackers, playerToPathNodeDistanceThreshold);
 
             while (!_isPathEndReached)
             {

@@ -23,7 +23,7 @@ The runtime is three layers plus a spawning layer that connects them:
                  │ dataProvider.SetArObjectTransform(spawned, pathViz)
                  ▼
  ┌────────────────────────────────────────────────────────────────┐
- │ INTERACTION PROVIDER (scene-level singleton, per platform)     │
+ │ INTERACTION PROVIDER (per platform; one per exhibit in VR)     │
  │   MovementInteractionProviderBase (abstract)                   │
  │     ├─ ARMovementInteractionDataProvider   (phone)             │
  │     ├─ VRMovementInteractionDataProvider   (Quest / OpenXR)    │
@@ -93,18 +93,41 @@ directly — they only see normalized floats and UnityEvents. Per platform:
 
 | Signal | AR (phone) | VR (Quest) | Test (editor) |
 |---|---|---|---|
-| TiltZ01 / SignedTiltZ01 | camera euler Z | HMD euler Z | Q/E keys |
-| SignedTiltY01 (puzzle rotation) | camera yaw minus yaw-at-puzzle-entry | right-stick X | Z/C keys |
-| SingleTouch / DoubleTouch | 1-finger / 2-finger tap | bound Input System actions | U / T keys |
-| Shake | accelerometer high-pass + cooldown | per-hand `deviceVelocity` high-pass, burst counting in a sliding window, cooldown | S key |
+| TiltZ01 / SignedTiltZ01 | camera euler Z | HMD euler Z (head roll) | Q/E keys |
+| SignedTiltY01 (puzzle rotation) | camera yaw minus yaw-at-puzzle-entry | left-stick X, rate-controlled (angle holds on release), zeroed at puzzle lock-on | Z/C keys |
+| SingleTouch / DoubleTouch | 1-finger / 2-finger tap | trigger (either hand) or B / A | U / T keys |
+| Shake | accelerometer high-pass + cooldown | `ShakeDetector` over per-hand `deviceVelocity`: low-pass, burst counting in a sliding window, cooldown | S key |
+| Puzzle lock-on (`GetForwardRayHit`) | screen centre | head gaze, with `VrGazeReticle` on the puzzle | camera forward |
 
 Notes:
 - `NormalizeRotationAngles` (shared in `InteractionUtils`) maps eulers to [-180, 180) and
   flips sign; all tilt logic depends on this convention.
 - OpenXR does not populate `deviceAcceleration`; the VR shake pipeline derives bursts from
-  `deviceVelocity` instead (see CLAUDE.md gotchas).
+  `deviceVelocity` instead (see CLAUDE.md gotchas). Without XR InputDevices (XR Device
+  Simulator, tests) it differentiates the Input System hand position instead.
+- VR bindings live in `Assets/Code/VR/XenobjectsVRInput.inputactions`.
 - The provider also owns debug TMP texts and a debug param input field
-  (`TryGetParamValue`) — acknowledged wart, see "Direction".
+  (`TryGetParamValue`) — acknowledged wart, see "Direction". The VR museum's wrist HUD
+  (`VrDebugHud`) already observes providers instead of using those fields.
+
+## VR museum (several exhibits)
+
+`MuseumSimulationVR` shows all three objects at once, so it breaks the one-object assumption
+of the phone flow. Each exhibit gets its own `VRMovementInteractionDataProvider`;
+`VrExhibitFocus` picks the exhibit the visitor stands at (horizontal head distance, with
+hysteresis, via the pure `ExhibitFocusSelector`) and calls `SetFocused` on the providers:
+
+- An exhibit's object is initialized (`SetArObjectTransform`) the first time it gains focus —
+  the VR stand-in for scanning its marker — so start delays play when the visitor arrives.
+- An **unfocused** provider keeps reporting distance (distance-driven effects stay live from
+  afar) but holds tilt, movement and durations at zero and raises no events. Without this,
+  idling at Object 3 would start Object 1's path sequence, and a tap would toggle all three.
+- Managers are unchanged; AR providers are always focused.
+
+The scene is generated from `MuseumSimulation` by `VrMuseumSceneBuilder` (Xenobjects ▸ VR ▸
+Rebuild Museum VR Scene): keyboard player, test provider and screen-space UI out; XR rig,
+controllers, wrist HUD, gaze reticle, self-disabling XR Device Simulator and a VR copy of
+the post-processing profile (no ambient occlusion) in.
 
 ## Effects system
 

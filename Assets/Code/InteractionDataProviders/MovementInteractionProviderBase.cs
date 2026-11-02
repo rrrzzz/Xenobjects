@@ -37,12 +37,28 @@ namespace Code
         public UnityEvent SingleTouchEvent { get; } = new UnityEvent();
         public UnityEvent ShakeEvent { get; } = new UnityEvent();
 
+        /// <summary>
+        /// False while the visitor is at another exhibit (VR museum: one provider per object).
+        /// An unfocused provider keeps reporting distance so distance-driven effects stay live,
+        /// but holds tilt, movement and durations at zero and raises no events. Always true on
+        /// the phone, where only one object exists at a time.
+        /// </summary>
+        public bool IsFocused { get; private set; } = true;
+
+        /// <summary>
+        /// What can trace the Object 1 tentacle path: on the phone, the phone itself. The VR
+        /// provider adds the hands, because the path loops around the object at podium height.
+        /// </summary>
+        public virtual Transform[] PathTrackers => _defaultPathTrackers ??= new[] { camTr };
+
         [HideInInspector] public Transform camTr;
         
         protected float _movementStateStartTime;
         protected Vector3 _camPrevPosition;
         protected float _prevTime;
         protected float _puzzleEnteredYRotation;
+
+        private Transform[] _defaultPathTrackers;
         
         
         protected virtual void Awake()
@@ -52,18 +68,55 @@ namespace Code
         }
         
         private void Update()
-        { 
+        {
+            if (!IsFocused)
+            {
+                UpdateDistanceToObject();
+                return;
+            }
+
             UpdateMovementStatus();
             UpdateDistanceToObject();
             UpdateDeviceTiltAngle();
             UpdateTouchStatus();
             UpdateShakeStatus();
         }
-        
-        public void SetPuzzleEnteredRotation()
+
+        public virtual void SetPuzzleEnteredRotation()
         {
             _puzzleEnteredYRotation = NormalizeRotationAngles(camTr.rotation.eulerAngles).y;
             UpdateDeviceTiltAngle();
+        }
+
+        public void SetFocused(bool isFocused)
+        {
+            if (IsFocused == isFocused)
+            {
+                return;
+            }
+
+            IsFocused = isFocused;
+            TiltZ01 = 0;
+            SignedTiltZ01 = 0;
+            SignedTiltY01 = 0;
+            IsMoving = false;
+            MovementDuration = 0;
+            IdleDuration = 0;
+
+            // Restart movement tracking so durations count from the moment of focus, not from
+            // whatever happened while the visitor was at another exhibit.
+            _movementStateStartTime = Time.realtimeSinceStartup;
+            _prevTime = Time.realtimeSinceStartup;
+            if (camTr)
+            {
+                _camPrevPosition = camTr.position;
+            }
+
+            OnFocusChanged(isFocused);
+        }
+
+        protected virtual void OnFocusChanged(bool isFocused)
+        {
         }
 
         
@@ -102,14 +155,17 @@ namespace Code
                 IdleDuration = movementStateDuration;
             }
             
-            if (!(Time.realtimeSinceStartup - _prevTime > movementTrackingInterval)) return;
-            
+            if (!(Time.realtimeSinceStartup - _prevTime > movementTrackingInterval))
+                return;
+
             var movementDist = Vector3.Distance(camTr.position, _camPrevPosition);
             _camPrevPosition = camTr.position;
             _prevTime = Time.realtimeSinceStartup;
             
             var currentMovementStatus = movementDist > movementThreshold;
-            if (currentMovementStatus == IsMoving) return;
+            if (currentMovementStatus == IsMoving)
+                return;
+
             IsMoving = currentMovementStatus;
             
             if (isDebugInfoShown && movedTxt)
@@ -124,7 +180,8 @@ namespace Code
         
         private void UpdateDistanceToObject()
         {
-            if (!arObjectTr) return;
+            if (!arObjectTr)
+                return;
 
             DistanceToArObjectRaw = Vector3.Distance(camTr.position,
                 arObjectTr.position);

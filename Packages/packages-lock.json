@@ -318,17 +318,16 @@
       }
     },
     "com.unity.xr.arcore": {
-      "version": "6.6.2",
+      "version": "file:com.unity.xr.arcore",
       "depth": 0,
-      "source": "registry",
+      "source": "embedded",
       "dependencies": {
+        "com.unity.xr.arfoundation": "6.6.2",
         "com.unity.xr.core-utils": "2.6.0",
         "com.unity.xr.management": "4.4.0",
-        "com.unity.xr.arfoundation": "6.6.2",
         "com.unity.modules.androidjni": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
+      }
     },
     "com.unity.xr.arfoundation": {
       "version": "6.6.2",

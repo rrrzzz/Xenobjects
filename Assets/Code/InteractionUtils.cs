@@ -33,6 +33,24 @@ namespace Code
         }
 
         /// <summary>
+        /// Distance from <paramref name="position"/> to the nearest of <paramref name="transforms"/>,
+        /// skipping destroyed entries; infinity when there is none.
+        /// </summary>
+        public static float DistanceToNearest(Vector3 position, Transform[] transforms)
+        {
+            var nearest = float.PositiveInfinity;
+            foreach (var transform in transforms)
+            {
+                if (transform)
+                {
+                    nearest = Mathf.Min(nearest, Vector3.Distance(position, transform.position));
+                }
+            }
+
+            return nearest;
+        }
+
+        /// <summary>
         /// Parses a comma-separated float list (invariant culture) into <paramref name="target"/>.
         /// Unparsable or missing entries keep their existing value. Extra entries beyond the
         /// target length are ignored. Returns true if at least one value was parsed.

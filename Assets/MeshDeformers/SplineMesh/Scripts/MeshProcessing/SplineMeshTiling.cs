@@ -63,7 +63,7 @@ namespace SplineMesh
         private bool _isVanishing;
         private bool _isVanishingByDistance;
         private int _currentNodeToReach;
-        private Transform _playerTr;
+        private Transform[] _playerTrs;
         private float _playerToPathNodeDistanceThreshold;
         private Transform[] _segmentTransforms;
         private readonly Vector3 _endPos = new Vector3(7.53f, -16.57f, -23.33f);
@@ -146,7 +146,7 @@ namespace SplineMesh
         private void ResumeVanishingIfCloseToCurrentNode()
         {
             var globalPos = GetGlobalNodePos(_currentNodeToReach);
-            var distanceToNode = Vector3.Distance(globalPos, _playerTr.position);
+            var distanceToNode = DistanceToNearestPlayer(globalPos);
 
             if (distanceToNode < _playerToPathNodeDistanceThreshold && !_isVanishing)
             {
@@ -160,7 +160,21 @@ namespace SplineMesh
                 }
                 _isVanishing = true;
             }
-        } 
+        }
+
+        private float DistanceToNearestPlayer(Vector3 position)
+        {
+            var nearest = float.PositiveInfinity;
+            foreach (var player in _playerTrs)
+            {
+                if (player)
+                {
+                    nearest = Mathf.Min(nearest, Vector3.Distance(position, player.position));
+                }
+            }
+
+            return nearest;
+        }
         
         [Button]
         private void SetAllNodeControlsToMirrored()
@@ -250,7 +264,16 @@ namespace SplineMesh
         // [Button]
         public void InitVanishing(Transform playerTransform, float playerToPathNodeDistanceThreshold)
         {
-            _playerTr = playerTransform;
+            InitVanishing(new[] { playerTransform }, playerToPathNodeDistanceThreshold);
+        }
+
+        /// <summary>
+        /// Vanishes the path node by node as the nearest of <paramref name="playerTransforms"/>
+        /// reaches each node (on the phone the phone itself; in VR the head and both hands).
+        /// </summary>
+        public void InitVanishing(Transform[] playerTransforms, float playerToPathNodeDistanceThreshold)
+        {
+            _playerTrs = playerTransforms;
             _playerToPathNodeDistanceThreshold = playerToPathNodeDistanceThreshold;
             _currentNodeToReach = 0;
 

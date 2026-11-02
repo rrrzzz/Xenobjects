@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/VRTest.unity
     guid: c2a51cc7547a4164c8e972562cbf3ce2
+  - enabled: 1
+    path: Assets/Scenes/MuseumSimulationVR.unity
+    guid: 2ce53871c02cbfe4989cc371f61ddc3f
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: fa83f21d6d0954c4298caa493a2eebea, type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: ab5e1320379548042a2c82db463ce1fd, type: 2}
